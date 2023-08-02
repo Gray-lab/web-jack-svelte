@@ -1,0 +1,36 @@
+{
+	"name": "web-jack-svelte",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "npm run wasm && vite dev",
+		"build": "npm run wasm && vite build",
+		"preview": "npm run wasm && vite preview",
+		"test": "npm run wasm && npm run test:integration && npm run test:unit",
+		"lint": "prettier --plugin-search-dir . --check . && eslint .",
+		"format": "prettier --plugin-search-dir . --write .",
+		"test:integration": "playwright test",
+		"test:unit": "vitest",
+		"modularize-wasm": "node ./jack-vm/modularize.js",
+		"wasm": "wasm-pack build ./jack-vm --target web && npm run modularize-wasm"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.28.1",
+		"@sveltejs/adapter-auto": "^2.0.0",
+		"@sveltejs/kit": "^1.20.4",
+		"eslint": "^8.28.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-svelte": "^2.30.0",
+		"prettier": "^2.8.0",
+		"prettier-plugin-svelte": "^2.10.1",
+		"svelte": "^4.0.5",
+		"vite": "^4.4.2",
+		"vite-plugin-wasm-pack": "^0.1.12",
+		"vitest": "^0.32.2"
+	},
+	"type": "module",
+	"dependencies": {
+		"@codemirror/lang-javascript": "^6.1.9",
+		"codemirror": "^6.0.1"
+	}
+}
