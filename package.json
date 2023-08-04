@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "npm run wasm && vite dev",
+		"dev": "npm run wasm-dev && vite dev",
 		"build": "npm run wasm && vite build",
 		"preview": "npm run wasm && vite preview",
 		"test": "npm run wasm && npm run test:integration && npm run test:unit",
@@ -12,6 +12,7 @@
 		"test:integration": "playwright test",
 		"test:unit": "vitest",
 		"modularize-wasm": "node ./jack-vm/modularize.js",
+		"wasm-dev": "wasm-pack build ./jack-vm --dev --target web && npm run modularize-wasm",
 		"wasm": "wasm-pack build ./jack-vm --target web && npm run modularize-wasm"
 	},
 	"devDependencies": {
