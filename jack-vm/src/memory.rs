@@ -1,12 +1,14 @@
 use wasm_bindgen::JsCast;
-use wasm_bindgen_test::console_log;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::CanvasRenderingContext2d;
 
 use crate::{
     charmap::CharMap,
     parser::{Offset, Segment},
 };
-use std::ops::{Index, IndexMut};
+use std::{
+    ops::{Index, IndexMut},
+    vec,
+};
 
 pub type WordSize = i16;
 
@@ -32,6 +34,8 @@ const TEMP_MAX: WordSize = 12;
 // Display canvas constants
 pub const FILL_COLOR: &str = "rgb(0, 255, 0)";
 pub const EMPTY_COLOR: &str = "rgb(10, 10, 10)";
+pub const FILL_COLOR_ARR: [u8; 4] = [0, 255, 0, 255];
+pub const EMPTY_COLOR_ARR: [u8; 4] = [10, 10, 10, 255];
 
 struct HeapAllocation {
     pointer: WordSize,
@@ -88,6 +92,7 @@ pub struct Memory {
     pub char_map: CharMap,
     heap_alloc: Vec<HeapAllocation>,
     pub display_updated: bool,
+    pub finished: bool,
 }
 
 struct MemoryVec(Vec<WordSize>);
@@ -126,8 +131,6 @@ impl Memory {
         arg: WordSize,
         this: WordSize,
         that: WordSize,
-        ctx: CanvasRenderingContext2d,
-        canvas: HtmlCanvasElement,
     ) -> Memory {
         let mut ram = MemoryVec::new(vec![0; Memory::ram_size() as usize]);
         let display = MemoryVec::new(vec![0; Memory::display_size() as usize]);
@@ -138,17 +141,22 @@ impl Memory {
         ram[THAT] = that;
 
         // Initialize display canvas
-        // let document = web_sys::window().unwrap().document().unwrap();
-        // let canvas = document.get_element_by_id("display-canvas").unwrap();
-        let canvas = canvas;
-        // let canvas: web_sys::HtmlCanvasElement = canvas
-        //     .dyn_into::<web_sys::HtmlCanvasElement>()
-        //     .map_err(|_| ())
-        //     .unwrap();
+        let document = web_sys::window().unwrap().document().unwrap();
+        let canvas = document.get_element_by_id("display-canvas").unwrap();
+        let canvas: web_sys::HtmlCanvasElement = canvas
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .map_err(|_| ())
+            .unwrap();
 
-        let canvas_context = ctx;
-        let string = format!("{:?}", canvas_context);
-        console_log!("{}", string);
+        canvas.set_width(DISPLAY_WIDTH as u32);
+        canvas.set_height(DISPLAY_HEIGHT as u32);
+
+        let canvas_context = canvas
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap();
 
         canvas_context.set_line_width(1.into());
         canvas_context.set_fill_style(&FILL_COLOR.into());
@@ -166,6 +174,7 @@ impl Memory {
             char_map: CharMap::new(),
             heap_alloc: Vec::new(),
             display_updated: false,
+            finished: false,
         }
     }
 

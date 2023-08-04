@@ -1,12 +1,10 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use js_sys::Int16Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::console_log;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
-use crate::jacklib::{self, NativeFunction};
+use crate::jacklib::{self, NativeFunction, clear_screen};
 use crate::memory::{Memory, WordSize};
 use crate::parser::{parse_bytecode, Bytecode, Command, Function, Segment};
 
@@ -30,6 +28,7 @@ pub struct Program {
     native_functions: HashMap<String, NativeFunction>,
     memory: Memory,
     call_stack: Vec<StackFrame>,
+    pub finished: bool,
 }
 
 #[wasm_bindgen]
@@ -38,8 +37,7 @@ impl Program {
      * Initializes the program given a set of code and a configuration
      */
     #[wasm_bindgen(constructor)]
-    pub fn new(input: &str, ctx: CanvasRenderingContext2d,
-        canvas: HtmlCanvasElement) -> Program {
+    pub fn new(input: &str) -> Program {
         // set panic hook
         console_error_panic_hook::set_once();
 
@@ -49,7 +47,10 @@ impl Program {
         let arg = 400;
         let this = 3000;
         let that = 4000;
-        let memory = Memory::new(sp, lcl, arg, this, that, ctx, canvas);
+        let mut memory = Memory::new(sp, lcl, arg, this, that);
+
+        // Fill canvas at init
+        clear_screen(&mut memory, 0);
 
         // some library functions are implemented in jack
         // Keyboard.readChar
@@ -328,6 +329,7 @@ impl Program {
             native_functions,
             memory,
             call_stack,
+            finished: false,
         }
     }
 
@@ -336,15 +338,27 @@ impl Program {
      * Returns true if display was updated, otherwise returns false.
      */
     pub fn step(&mut self, key: WordSize) -> bool {
+        // if the call stack is empty, we are done
         let mut frame = match self.call_stack.last_mut() {
             Some(frame) => frame,
-            None => return false,
+            None => {
+                self.memory.finished = true;
+                self.finished = true;
+                return false;
+            },
         };
 
-        // If there are no more instructions, return false and take no other action
+        // If there are no more instructions, set memory finished bit
         let length = frame.function.borrow().commands.len();
         if length <= frame.next_line {
-            return false;
+            self.memory.finished = true;
+        }
+
+        // check for finished bit (gosh, this is pretty ugly at this point)
+        if self.memory.finished {
+            self.finished = true;
+            console_log!("Program completed.");
+            return false
         }
 
         self.memory.display_updated = false;
@@ -483,16 +497,6 @@ impl Program {
         self.memory.display_updated
     }
 
-
-    /**
-     * Get a view into the memory at location pointer for a length of length
-     * The memory is not copied. This function is unsafe. 
-     */
-    #[wasm_bindgen]
-    pub fn get_memory(&self, pointer:usize, length:usize) -> Int16Array {
-        unsafe { Int16Array::view_mut_raw(pointer as *mut i16, length) }
-    }
-
     pub fn ram_size(&self) -> usize {
         Memory::ram_size() as usize
     }
@@ -535,5 +539,9 @@ impl Program {
      */
     pub fn keyboard(&self) -> WordSize {
         self.memory.keyboard()
+    }
+
+    pub fn end(&mut self) {
+        self.memory.finished = true;
     }
 }

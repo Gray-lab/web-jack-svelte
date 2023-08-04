@@ -20,7 +20,6 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn greet(str: &str) {
+pub fn greet() {
     console_log!("Hi there!");
-    alert(&format!("Hi there,{}!", str));
 }

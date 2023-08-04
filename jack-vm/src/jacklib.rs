@@ -1,8 +1,23 @@
+/* This module contains implementations for the Jack standard library functions
+ * Some things to note:
+ *  1. readInt(), readChar(), and readLine() are implemented directly in Jack Bytecode, located in the jack_lib_functions directory
+ *  2. error(s) logs the output to console.log via the wasm macro
+ *  3. halt() sets the finished bit in the memory module
+ *  4. wait(n) waits for the time it takes n to count down in a while loop - the exact time is architecture dependent
+ *  5. draw functions update both the canvas and the memory array corresponding to the display
+ * */
+
+
 use std::cmp::{max, min};
+use wasm_bindgen::Clamped;
 use wasm_bindgen_test::console_log;
+use web_sys::ImageData;
 // use web_sys::CanvasRenderingContext2d;
 
-use crate::memory::{Memory, WordSize, DISPLAY_HEIGHT, DISPLAY_WIDTH, WORDSIZE, FILL_COLOR, EMPTY_COLOR};
+use crate::memory::{
+    Memory, WordSize, DISPLAY_HEIGHT, DISPLAY_WIDTH, EMPTY_COLOR, EMPTY_COLOR_ARR, FILL_COLOR,
+    FILL_COLOR_ARR, WORDSIZE,
+};
 
 pub type NativeFunction = fn(&mut Memory, WordSize) -> WordSize;
 
@@ -10,6 +25,7 @@ const LINES: WordSize = 23;
 const COLS: WordSize = 64;
 const VOID: WordSize = 0;
 const CHAR_HEIGHT: WordSize = 11;
+const CHAR_WIDTH: WordSize = 8;
 
 // MATH
 pub fn multiply(memory: &mut Memory, args: WordSize) -> WordSize {
@@ -286,9 +302,42 @@ pub fn array_dispose(memory: &mut Memory, args: WordSize) -> WordSize {
 fn print_char_helper(memory: &mut Memory, character: &WordSize) {
     console_log!("in print_char_helper({})", character);
     let bitmap = memory.char_map.get_bitmap(character).clone();
+
     // 32 words in a display line
     // each cursor line covers 11 display lines
+    // draw to canvas
 
+    // bitmap has a vec of U8 values -> [12,30,30,30,12,12,0,12,12,0,0]
+    // for each value, we need to turn it into 8 pixels
+    // each pixel is 4 values: RGBA
+    // if the pixel is 1, we want RGBA == 0, 255, 0, 255
+    // if pixel is 0, we want RGBA == 10, 10, 10, 255
+    let mut pixel_data = Vec::new();
+
+    for line in bitmap.clone() {
+        for i in 0..8 {
+            let bit = (line >> i) & 1;
+            if bit == 1 {
+                pixel_data.extend_from_slice(&FILL_COLOR_ARR[..]);
+            } else {
+                pixel_data.extend_from_slice(&EMPTY_COLOR_ARR[..]);
+            }
+        }
+    }
+
+    let slice_data = Clamped(&pixel_data[..]);
+    let pixel_row = ImageData::new_with_u8_clamped_array(slice_data, CHAR_WIDTH as u32)
+        .expect("Error creating ImageData");
+    memory
+        .canvas_context
+        .put_image_data(
+            &pixel_row,
+            (memory.cursor_col * CHAR_WIDTH).into(),
+            (memory.cursor_line * CHAR_HEIGHT).into(),
+        )
+        .expect("Error when placing char into canvas");
+
+    // set the memory value in the display mapped memory
     for char_row in 0..11 {
         let address = (DISPLAY_WIDTH / WORDSIZE) * (memory.cursor_line * CHAR_HEIGHT + char_row)
             + memory.cursor_col / 2;
@@ -304,9 +353,6 @@ fn print_char_helper(memory: &mut Memory, character: &WordSize) {
             memory.set_display_word(address, new_value);
         }
     }
-
-    // Add canvas update for characters
-    
 }
 
 /**
@@ -355,7 +401,7 @@ pub fn move_cursor(memory: &mut Memory, args: WordSize) -> WordSize {
 pub fn print_char(memory: &mut Memory, args: WordSize) -> WordSize {
     assert!(args == 1);
     let c = &memory.get_arg(0);
-    console_log!("in print_char({})", c);
+    // console_log!("in print_char({})", c);
     print_char_helper(memory, c);
     step_cursor_helper(memory);
     VOID
@@ -486,8 +532,17 @@ fn draw_line_helper(memory: &mut Memory, x1: WordSize, y1: WordSize, x2: WordSiz
  */
 pub fn clear_screen(memory: &mut Memory, args: WordSize) -> WordSize {
     assert!(args == 0);
-    // memory.clear_display();
-    memory.canvas_context.clear_rect(0.into(), 0.into(),  memory.canvas.width().into(), memory.canvas.height().into());
+    memory.clear_display();
+    console_log!("Clearing screen");
+    let saved_fill_style = memory.canvas_context.fill_style();
+    memory.canvas_context.set_fill_style(&EMPTY_COLOR.into());
+    memory.canvas_context.fill_rect(
+        0.into(),
+        0.into(),
+        memory.canvas.width().into(),
+        memory.canvas.height().into(),
+    );
+    memory.canvas_context.set_fill_style(&saved_fill_style);
     VOID
 }
 
@@ -497,13 +552,18 @@ pub fn clear_screen(memory: &mut Memory, args: WordSize) -> WordSize {
  */
 pub fn fill_screen(memory: &mut Memory, args: WordSize) -> WordSize {
     assert!(args == 0);
-    // memory.fill_display();
+    memory.fill_display();
 
     // checking if the current fill_style is filled is hard, so we just save the current
     // fill_style, fill the screen, and revert to the original fill_style
     let saved_fill_style = memory.canvas_context.fill_style();
     memory.canvas_context.set_fill_style(&FILL_COLOR.into());
-    memory.canvas_context.fill_rect(0.into(), 0.into(), memory.canvas.width().into(), memory.canvas.height().into());
+    memory.canvas_context.fill_rect(
+        0.into(),
+        0.into(),
+        memory.canvas.width().into(),
+        memory.canvas.height().into(),
+    );
     memory.canvas_context.set_fill_style(&saved_fill_style);
     VOID
 }
@@ -516,7 +576,7 @@ pub fn fill_screen(memory: &mut Memory, args: WordSize) -> WordSize {
 pub fn set_color(memory: &mut Memory, args: WordSize) -> WordSize {
     assert!(args == 1);
     let color = memory.get_arg(0);
-    // memory.screen_color = color;
+    memory.screen_color = color;
 
     // set canvas context fill style
     let value;
@@ -540,9 +600,11 @@ pub fn draw_pixel(memory: &mut Memory, args: WordSize) -> WordSize {
     assert!(args == 2);
     let x = memory.get_arg(0);
     let y = memory.get_arg(1);
-    // memory.set_display_xy(x, y);
+    memory.set_display_xy(x, y);
 
-    memory.canvas_context.fill_rect(x.into(), y.into(), 1.into(), 1.into());
+    memory
+        .canvas_context
+        .fill_rect(x.into(), y.into(), 1.into(), 1.into());
     VOID
 }
 
@@ -560,7 +622,7 @@ pub fn draw_line(memory: &mut Memory, args: WordSize) -> WordSize {
     let y1 = memory.get_arg(1);
     let x2 = memory.get_arg(2);
     let y2 = memory.get_arg(3);
-    // draw_line_helper(memory, x1, y1, x2, y2);
+    draw_line_helper(memory, x1, y1, x2, y2);
 
     // draw in canvas
     memory.canvas_context.begin_path();
@@ -583,14 +645,16 @@ pub fn draw_rectangle_outline(memory: &mut Memory, args: WordSize) -> WordSize {
     let y1 = memory.get_arg(1);
     let x2 = memory.get_arg(2);
     let y2 = memory.get_arg(3);
-    // draw_line_helper(memory, x1, y1, x1, y2);
-    // draw_line_helper(memory, x2, y1, x2, y2);
-    // draw_line_helper(memory, x1, y1, x2, y1);
-    // draw_line_helper(memory, x1, y2, x2, y2);
+    draw_line_helper(memory, x1, y1, x1, y2);
+    draw_line_helper(memory, x2, y1, x2, y2);
+    draw_line_helper(memory, x1, y1, x2, y1);
+    draw_line_helper(memory, x1, y2, x2, y2);
 
     // draw in canvas
     memory.canvas_context.begin_path();
-    memory.canvas_context.rect(x1.into(), y1.into(), (x2-x1).into(), (y2-y1).into());
+    memory
+        .canvas_context
+        .rect(x1.into(), y1.into(), (x2 - x1).into(), (y2 - y1).into());
     memory.canvas_context.stroke();
     VOID
 }
@@ -608,18 +672,20 @@ pub fn draw_rectangle(memory: &mut Memory, args: WordSize) -> WordSize {
     let y1 = memory.get_arg(1);
     let x2 = memory.get_arg(2);
     let y2 = memory.get_arg(3);
-    // let dy = y2 - y1;
-    // let abs_dy = i16::abs(dy);
-    // let delta_y = dy.signum();
-    // let mut a = 0;
-    // while i16::abs(a) <= abs_dy {
-    //     draw_line_helper(memory, x1, y1 + a, x2, y1 + a);
-    //     a += delta_y;
-    // }
+    let dy = y2 - y1;
+    let abs_dy = i16::abs(dy);
+    let delta_y = dy.signum();
+    let mut a = 0;
+    while i16::abs(a) <= abs_dy {
+        draw_line_helper(memory, x1, y1 + a, x2, y1 + a);
+        a += delta_y;
+    }
 
     // draw in canvas
     memory.canvas_context.begin_path();
-    memory.canvas_context.rect(x1.into(), y1.into(), (x2-x1).into(), (y2-y1).into());
+    memory
+        .canvas_context
+        .rect(x1.into(), y1.into(), (x2 - x1).into(), (y2 - y1).into());
     memory.canvas_context.fill();
     VOID
 }
@@ -658,16 +724,21 @@ pub fn draw_circle(memory: &mut Memory, args: WordSize) -> WordSize {
 
     // draw in canvas
     memory.canvas_context.begin_path();
-    if memory.canvas_context.ellipse(
-        x1.into(), 
-        y1.into(), 
-        r.into(), 
-        r.into(), 
-        0.into(), 
-        0.into(),
-        (std::f32::consts::PI * 2.0).into()).is_err() {
-            console_log!("Error drawing ellipse")
-        };
+    if memory
+        .canvas_context
+        .ellipse(
+            x1.into(),
+            y1.into(),
+            r.into(),
+            r.into(),
+            0.into(),
+            0.into(),
+            (std::f32::consts::PI * 2.0).into(),
+        )
+        .is_err()
+    {
+        console_log!("Error drawing ellipse")
+    };
     memory.canvas_context.stroke();
     memory.canvas_context.fill();
     VOID
@@ -779,16 +850,34 @@ pub fn de_alloc(memory: &mut Memory, args: WordSize) -> WordSize {
 }
 
 // SYS
-pub fn wait(_memory: &mut Memory, _args: WordSize) -> WordSize {
+pub fn wait(memory: &mut Memory, args: WordSize) -> WordSize {
+    assert!(args == 1);
+    let mut _wait_time = memory.get_arg(0);
+    console_log!("Waiting for {}", _wait_time);
+    while _wait_time > 0 {
+        _wait_time -= 1;
+    }
     VOID
 }
 
-pub fn halt(_memory: &mut Memory, _args: WordSize) -> WordSize {
-    panic!("halt is not implemented");
+/**
+ * sets the finished bit in memory to terminate execution
+ */
+pub fn halt(memory: &mut Memory, args: WordSize) -> WordSize {
+    assert!(args == 0);
+    memory.finished = true;
+    // I think we can set a 'running' bit that lets us terminate execution in the program module
     VOID
 }
 
-pub fn error(_memory: &mut Memory, _args: WordSize) -> WordSize {
-    panic!("error is not implemented");
+/**
+ * currently just exits the program by setting the finished bit
+ */
+pub fn error(memory: &mut Memory, args: WordSize) -> WordSize {
+    assert!(args == 1);
+    let error_code = memory.get_arg(0);
+    console_log!("Fatal Error: {}", error_code);
+    memory.finished = true;
+    // this could initially just terminate with the running bit, but if there is an error message we could just use console log, or print it to console
     VOID
 }
