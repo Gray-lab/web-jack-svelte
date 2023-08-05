@@ -685,7 +685,7 @@ pub fn draw_rectangle(memory: &mut Memory, args: WordSize) -> WordSize {
     memory.canvas_context.begin_path();
     memory
         .canvas_context
-        .rect(x1.into(), y1.into(), (x2 - x1).into(), (y2 - y1).into());
+        .rect(x1.into(), y1.into(), (x2 - x1 + 1).into(), (y2 - y1 + 1).into()); // need to add 1 to get correct size
     memory.canvas_context.fill();
     VOID
 }
@@ -851,12 +851,12 @@ pub fn de_alloc(memory: &mut Memory, args: WordSize) -> WordSize {
 
 // SYS
 pub fn wait(memory: &mut Memory, args: WordSize) -> WordSize {
-    assert!(args == 1);
-    let mut _wait_time = memory.get_arg(0);
-    console_log!("Waiting for {}", _wait_time);
-    while _wait_time > 0 {
-        _wait_time -= 1;
-    }
+    // assert!(args == 1);
+    // let mut _wait_time = memory.get_arg(0);
+    // console_log!("Waiting for {}", _wait_time);
+    // while _wait_time > 0 {
+    //     _wait_time -= 1;
+    // }
     VOID
 }
 
