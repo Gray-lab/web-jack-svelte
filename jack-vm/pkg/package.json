@@ -1,0 +1,1 @@
+{"name":"jack-vm","collaborators":["Martin Grym <martin.grym@gmail.com>"],"version":"0.1.0","files":["jack_vm_bg.wasm","jack_vm.js","jack_vm.d.ts"],"module":"jack_vm.js","types":"jack_vm.d.ts","sideEffects":false,"type":"module"}
