@@ -45,8 +45,8 @@ impl Program {
         let sp = 256;
         let lcl = 256; // when main gets called, SP moves and LCL should be set to 256
         let arg = 400;
-        let this = 3000;
-        let that = 4000;
+        let this = 0;
+        let that = 0;
         let mut memory = Memory::new(sp, lcl, arg, this, that);
 
         // Fill canvas at init
@@ -370,8 +370,8 @@ impl Program {
         frame.next_line += 1;
 
         // This prints the current command to the web console for debugging
-        // let command_string = format!("Executing {}:{:?}", frame.next_line - 1, current_command);
-        // console_log!("{}", command_string);
+        let command_string = format!("Executing {}:{:?}", frame.next_line - 1, current_command);
+        console_log!("{}", command_string);
 
         match &current_command.command {
             Command::Pop(seg, idx) => {

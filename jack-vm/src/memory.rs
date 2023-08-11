@@ -245,6 +245,7 @@ impl Memory {
                 }
             }
         };
+        wasm_bindgen_test::console_log!("{}", format!("\t>>> Popping address {}", address));
 
         self.ram[address] = value;
         value
@@ -402,6 +403,7 @@ impl Memory {
         }
 
         // Otherwise make a new allocation
+        // Memory allocation starts at max ram address and goes up (like a heap should!)
         let next_free = self
             .heap_alloc
             .last()
@@ -410,7 +412,7 @@ impl Memory {
         let new_pointer = next_free - requested_size;
         self.heap_alloc
             .push(HeapAllocation::new(new_pointer, requested_size));
-        // console_log!("Alloc returning new block with address of {}",new_pointer);
+        wasm_bindgen_test::console_log!("Alloc returning new block with address of {}",new_pointer);
         new_pointer
     }
 
