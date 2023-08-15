@@ -11,7 +11,8 @@
 	const pixelRatio = 1;
 
 	const defaultJackcode = square_jack;
-	const defaultBytecode = '// compile Jack code to populate this window';
+	const defaultBytecode = `compile Jack code to
+populate this window`;
 	let programLoaded = false;
 	let canvas;
 	let ctx;
@@ -102,7 +103,7 @@
 		});
 		canvas.setAttribute('id', 'display-canvas');
 
-		console.log("Loading...");
+		console.log('Loading...');
 		pyodide = await loadPyodide();
 		// this fetches the .py files from the static folder and writes them
 		// to the virtual file system that pyodide can access
@@ -129,7 +130,7 @@
 			`);
 
 		compiler = pyodide.pyimport('jack_analyzer');
-		console.log("Jack Compiler loaded");
+		console.log('Jack Compiler loaded');
 		pythonLoaded = true;
 	});
 </script>
@@ -143,23 +144,6 @@
 
 <div class="app-container">
 	<div class="upper-container">
-		<div class="intro-container">
-			<h2>{'{web-jack}'}</h2>
-			<p>
-				While working on the (excellent) nand2tetris course I thought that it would be great if
-				there was a way to compile, run, and explore Jack programs on the web, so I build this page.
-				<br /><br />
-				Here you can compile and run Jack code. There are some minor differences in the standard library
-				implementation which you can read about here. Most Jack programs should behave as expected, but
-				please let me know if you find any surprises!
-				<br /><br />
-				This page is built using Sveltekit, with all the heavy lifting (parsing, compiling, and Jack
-				code execution) handled by Rust compiled to web assembly. I learned a lot while building this,
-				and I hope it helps you learn more about computing and how languages work.
-				<br /><br />
-				Happy hacking - Martin
-			</p>
-		</div>
 		<div class="canvas-container">
 			Display
 			<canvas
@@ -168,51 +152,7 @@
 				height={height * pixelRatio}
 				style="width: {width}px; height: {height}px;"
 			/>
-		</div>
-	</div>
-	<div class="lower-container">
-		<div class="editor-container">
-			Jack Code
-			<div class="CM-container">
-				<CodeMirror
-					doc={defaultJackcode}
-					bind:docStore={jackcodeStore}
-					extensions={[basicSetup, myTheme]}
-					on:change={changeHandler}
-				/>
-			</div>
 			<div class="btn-container">
-				<button
-					class="btn"
-					disabled={!pythonLoaded}
-					on:click={() => {
-						const res = compiler.compile_main($jackcodeStore);
-						bytecodeStore.set(res);
-					}}>Compile</button
-				>
-			</div>
-		</div>
-		<div class="editor-container">
-			Compiled Bytecode
-			<div class="CM-container">
-				<CodeMirror
-					doc={defaultBytecode}
-					bind:docStore={bytecodeStore}
-					extensions={[basicSetup, myTheme]}
-					on:change={changeHandler}
-				/>
-			</div>
-			<div class="btn-container">
-				<button
-					class="btn"
-					on:click={() => {
-						program = new Program($bytecodeStore, ctx, canvas);
-						programLoaded = true;
-						ramSize = program.ram_size();
-						ramPointer = program.ram();
-						memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
-					}}>Load program</button
-				>
 				<button
 					class="btn"
 					disabled={!programLoaded}
@@ -257,11 +197,85 @@
 				>
 			</div>
 		</div>
+		<div class="intro-container">
+			<h2>{'{web-jack}'}</h2>
+			<p class="intro-text">
+				While working on the (excellent) nand2tetris course I thought that it would be great if
+				there was a way to compile, run, and explore Jack programs on the web.
+				<br /><br />
+				Here you can compile and run Jack code. Most Jack programs should behave as expected, but please
+				let me know if you find any surprises!
+				<br /><br />
+				This page is built using Sveltekit, with compilation handled by Python and code-execution and
+				display handled by Rust compiled to web assembly.
+				<br /><br />
+				Happy hacking -
+				<a href="https://github.com/Gray-lab" rel="noopener noreferrer" target="_blank">Martin</a>
+			</p>
+		</div>
+	</div>
+	<div class="lower-container">
+		<div class="jackcode-container">
+			Jack Code
+			<div class="CM-container">
+				<CodeMirror
+					doc={defaultJackcode}
+					bind:docStore={jackcodeStore}
+					extensions={[basicSetup, myTheme]}
+					on:change={changeHandler}
+				/>
+			</div>
+			<div class="btn-container">
+				<button
+					class="btn"
+					disabled={!pythonLoaded}
+					on:click={() => {
+						const res = compiler.compile_main($jackcodeStore);
+						bytecodeStore.set(res);
+					}}>Compile</button
+				>
+			</div>
+		</div>
+		<div class="bytecode-container">
+			Compiled Bytecode
+			<div class="CM-container">
+				<CodeMirror
+					doc={defaultBytecode}
+					bind:docStore={bytecodeStore}
+					extensions={[basicSetup, myTheme]}
+					on:change={changeHandler}
+				/>
+			</div>
+			<div class="btn-container">
+				<button
+					class="btn"
+					on:click={() => {
+						program = new Program($bytecodeStore, ctx, canvas);
+						programLoaded = true;
+						ramSize = program.ram_size();
+						ramPointer = program.ram();
+						memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
+					}}>Load program</button
+				>
+			</div>
+		</div>
 		<div class="display-container">
 			<div class="stack-container" />
 			<div class="memory-container">
 				Memory Display
-				<div class="ram-container">
+				<div class="memory">
+					{#if memArray}
+						{#each memArray as cell, i}
+							<div class="cell">
+								<span class="index">{i}</span>
+								<span class="value">{cell.toString(10)}</span>
+							</div>
+						{/each}
+					{:else}
+						<p>memArray was empty</p>
+					{/if}
+				</div>
+				<!-- <div class="stack-container">
 					<div class="memory">
 						{#if memArray}
 							{#each memArray as cell, i}
@@ -271,7 +285,7 @@
 							<p>memArray was empty</p>
 						{/if}
 					</div>
-				</div>
+				</div> -->
 				<div class="active-key-container" />
 				<div class="call-stack-container" />
 			</div>
@@ -287,11 +301,28 @@
 		font-family: 'Courier New', 'Lucida Console', monospace;
 		font-size: 14px;
 		line-height: 1.2em;
+		--upper-container-height: 330px;
+		/* Hide scrollbar for IE, Edge and Firefox */
+		/* -ms-overflow-style: none; /* IE and Edge */
+		/* scrollbar-width: none; /* Firefox */
 	}
-
+/*
+	::-webkit-scrollbar {
+		display: none;
+	}
+*/
 	:global(div) {
 		/* border: 1px solid rgb(119, 119, 119); */
 	}
+
+	a {
+		color: #00ff00;
+
+		&:hover {
+			text-decoration: none;
+		}
+	}
+
 	.app-container {
 		display: flex;
 		flex-direction: column;
@@ -302,63 +333,117 @@
 	.upper-container {
 		display: flex;
 		flex-direction: row;
-		height: 280px;
+		height: var(--upper-container-height);
 		width: 100%;
+	}
+
+	.canvas-container {
+		padding: 0px 10px;
+	}
+
+	.intro-text {
+		width: 75%;
 	}
 
 	.intro-container {
 		padding: 5px;
 		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		color: #e3e3e3;
 		box-sizing: content-box;
 		overflow: hidden;
-	}
-
-	.canvas-container {
-		padding: 5px;
+		text-align: center;
 	}
 
 	.lower-container {
 		display: flex;
 		flex-direction: row;
 		flex-grow: 1;
-		max-height: calc(100vh - 290px);
+		max-height: calc(100vh - var(--upper-container-height));
 		width: 100%;
 	}
 
-	.editor-container {
+	.bytecode-container {
+		display: flex;
+		flex-direction: column;
+		padding-left: 10px;
+		width: 320px;
+	}
+
+	.jackcode-container {
+		display: flex;
+		flex-direction: column;
+		padding-left: 10px;
+		min-width: 300px;
+		max-width: 700px;
+		overflow-x: auto;
+		flex-grow: 1;
+	}
+
+	.CM-container {
+		height: calc(100vh - var(--upper-container-height) - 70px);
+	}
+
+	.btn-container {
+		gap: 5px;
+		display: flex;
+		width: 100%;
+		height: auto;
+		flex-direction: row;
+		justify-content: flex-end;
+		padding-top: 10px;
+	}
+
+	.memory-container {
+		height: 100%;
+		padding-left: 10px;
 		display: flex;
 		flex-direction: column;
 	}
 
-	.CM-container {
-		overflow: auto;
-		box-sizing: content-box;
-		flex-shrink: 1;
-	}
-
-	.btn-container {
-		padding: 10px;
-	}
-
-	.memory-container {
-		width: 600px;
-		height: 400px;
-		border: 1px solid black;
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-	}
-
 	.memory {
 		width: 220px;
-		height: 100%;
-		overflow: auto;
+		height: calc(100vh - var(--upper-container-height) - 72px);
+		border: 1px solid black;
+		background-color: #202020;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+	.cell {
+		/* border-bottom: 1px solid black; */
+		display: flex;
+		/* justify-content: space-between; */
 	}
 
-	.cell {
-		margin: 0px;
-		padding: 1px;
+	.index {
+		padding: 1px 5px;
+		text-align: right;
+		color: #e3e3e3;
+		width: 50px;
+		border-right: 1px solid black;
+	}
+
+	.value {
+		padding: 1px 10px;
+		width: 100%;
 		border-bottom: 1px solid black;
+	}
+
+	button {
+		color: #e3e3e3;
+		background-color: #202020;
+		border: 1px solid #202020;
+		padding: 5px 20px;
+		border-radius: 5px;
+
+		&:hover {
+			border: 1px solid #00ff00;
+		}
+
+		&:active {
+			color: #00ff00;
+		}
 	}
 </style>

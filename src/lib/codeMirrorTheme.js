@@ -3,7 +3,8 @@ import { EditorView } from "codemirror"
 export let myTheme = EditorView.theme({
     "&": {
       color: "rgb(0, 255, 0)",
-      backgroundColor: "rgb(32, 32, 32)"
+      backgroundColor: "rgb(32, 32, 32)",
+      height: "100%",
     },
     ".cm-content": {
       caretColor: "rgb(0, 255, 0)"
@@ -18,5 +19,6 @@ export let myTheme = EditorView.theme({
       backgroundColor: "rgb(32, 32, 32)",
       color: "#e3e3e3",
       border: "1px solid black"
-    }
+    },
+
   }, {dark: true})

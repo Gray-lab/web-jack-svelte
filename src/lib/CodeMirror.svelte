@@ -140,6 +140,6 @@
 		border: 1px solid black;
 		color: rgb(13, 255, 0);
 		background-color: black;
-		overflow: scroll;
+		height: 500px !important;
 	}
 </style>
