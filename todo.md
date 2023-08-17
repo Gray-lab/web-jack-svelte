@@ -25,15 +25,17 @@ Otherwise, keyboard output should go to the selected codemirror instance
     - ~~Bytecode updates on edit~~
     - ~~Program is created with button click~~
     - ~~Program can be run when it is created~~
-    - Accept input
-    - Display memory state
-    - Display call stack
-    - Display input
+    - ~~Accept input~~
+    - ~~Display memory state~~
 
 4. add secondary functionality
-    - rewrite compiler in rust...
-    - compile jack to jack bytecode
-
-
-
-VIRTUALIZED TABLES
+    - ~~Compile jack to jack bytecode~~
+    - Disable control buttons if program is not readied
+    - Gray out editors while program is running; provide some kind of hint
+    - Display stack
+    - Highligh stack pointer
+    - Display call stack
+    - Display input
+    - Add dropdown for selecting programs
+    - Warning popup for losing changes when switching programs?
+    - Implement the memory display using virtualized lists
