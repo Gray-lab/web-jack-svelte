@@ -17,9 +17,13 @@ Keyboard -> when Running, keyboard events should go to the runtime keyboard on-d
 Otherwise, keyboard output should go to the selected codemirror instance
 
 
-1. check if a test program can be run using the wasm bindings
+~~1. check if a test program can be run using the wasm bindings~~
 
-2. set up structure of the main route
+2. fix stuff:
+    - Double size of canvas
+    - Use clean sans-serif font for non-code stuff
+    - Adjust colors
+    - Get rid of reset button
 
 3. add core functionality
     - ~~Bytecode updates on edit~~
@@ -39,3 +43,4 @@ Otherwise, keyboard output should go to the selected codemirror instance
     - Add dropdown for selecting programs
     - Warning popup for losing changes when switching programs?
     - Implement the memory display using virtualized lists
+    - Add 
