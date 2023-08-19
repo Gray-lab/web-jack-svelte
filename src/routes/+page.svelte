@@ -5,15 +5,15 @@
 	import { myTheme } from '$lib/codeMirrorTheme.js';
 	import { onMount } from 'svelte';
 	import CodeMirror, { basicSetup, minimalSetup, EditorView } from '../lib/CodeMirror.svelte';
+	import CanvasDisplay from '../lib/CanvasDisplay.svelte';
 
+	// Canvas scale (1.0 -> 512px x 256px)
+	const scale = 1.5;
 	const width = 512;
 	const height = 256;
-	const pixelRatio = 1;
-
 	const defaultJackcode = square_jack;
 	const defaultBytecode = `compile Jack code to
 populate this window`;
-	let programLoaded = false;
 	let canvas;
 	let ctx;
 	let program;
@@ -22,9 +22,13 @@ populate this window`;
 	let ramSize;
 	let ramPointer;
 	let wasmInstance;
-	let currentKey = 0;
 	let interval;
+	let compiler;
+	let pyodide;
+	let currentKey = 0;
 	let running = false;
+	let programLoaded = false;
+	let pythonLoaded = false;
 	$: showMem = false;
 	$: memArray = [];
 	$: stepCount = 30;
@@ -73,6 +77,50 @@ populate this window`;
 		currentKey = 0;
 	}
 
+	function onStepClick() {
+		runLoop(1);
+		memArray = memArray; // assignment triggers reactive update in Svelte
+	}
+
+	function onRunClick() {
+		running = true;
+		interval = setInterval(() => {
+			requestAnimationFrame(runLoopCallback);
+			const finished = program.finished;
+			if (finished) {
+				running = false;
+				clearInterval(interval);
+				memArray = memArray;
+			}
+		}, 0);
+	}
+
+	function onStopClick() {
+		running = false;
+		clearInterval(interval);
+		memArray = memArray;
+	}
+
+	function onEndClick() {
+		running = false;
+		program.end();
+		clearInterval(interval);
+		memArray = memArray;
+	}
+
+	function onCompileClick() {
+		const res = compiler.compile_main($jackcodeStore);
+		bytecodeStore.set(res);
+	}
+
+	function onLoadClick() {
+		program = new Program($bytecodeStore, ctx, canvas);
+		programLoaded = true;
+		ramSize = program.ram_size();
+		ramPointer = program.ram();
+		memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
+	}
+
 	function changeHandler({ detail: { tr } }) {
 		// nothing we need to do here
 	}
@@ -89,10 +137,6 @@ populate this window`;
 		runLoop(stepCount);
 	}
 
-	let test;
-	let compiler;
-	let pyodide;
-	let pythonLoaded = false;
 	onMount(async () => {
 		wasmInstance = await init(); // init initializes memory addresses needed by WASM and that will be used by JS/TS
 		console.log(wasmInstance); // wasmInstance.memory gives us direct access to the memory underlying the jack runtime
@@ -144,61 +188,12 @@ populate this window`;
 
 <div class="app-container">
 	<div class="upper-container">
-		<div class="canvas-container">
-			Display
-			<canvas
-				bind:this={canvas}
-				width={width * pixelRatio}
-				height={height * pixelRatio}
-				style="width: {width}px; height: {height}px;"
-			/>
-			<div class="btn-container">
-				<button
-					class="btn"
-					disabled={!programLoaded}
-					on:click={() => {
-						runLoop(1);
-						memArray = memArray; // assignment triggers reactive update in Svelte
-					}}>Step</button
-				>
-				<button
-					class="btn"
-					disabled={!programLoaded}
-					on:click={() => {
-						running = true;
-						interval = setInterval(() => {
-							requestAnimationFrame(runLoopCallback);
-							const finished = program.finished;
-							if (finished) {
-								running = false;
-								clearInterval(interval);
-								memArray = memArray;
-							}
-						}, 0);
-					}}>Run</button
-				>
-				<button
-					class="btn"
-					on:click={() => {
-						// program.end();
-						running = false;
-						clearInterval(interval);
-						memArray = memArray;
-					}}>Stop</button
-				>
-				<button
-					class="btn"
-					on:click={() => {
-						running = false;
-						program.end();
-						clearInterval(interval);
-						memArray = memArray;
-					}}>End</button
-				>
-			</div>
-		</div>
 		<div class="intro-container">
-			<h2>{'{web-jack}'}</h2>
+			<div class="nav_container">
+				<h3 class="title">{"{web_jack}"}</h3>
+				<div><a>about</a></div>
+				<div><a>github</a></div>
+			</div>
 			<p class="intro-text">
 				While working on the (excellent) nand2tetris course I thought that it would be great if
 				there was a way to compile, run, and explore Jack programs on the web.
@@ -213,10 +208,25 @@ populate this window`;
 				<a href="https://github.com/Gray-lab" rel="noopener noreferrer" target="_blank">Martin</a>
 			</p>
 		</div>
+		<div class="canvas-container">
+			<div class="label">STUFF RUNS HERE</div>
+			<CanvasDisplay
+				bind:canvas
+				{programLoaded}
+				{running}
+				{width}
+				{height}
+				{scale}
+				{onStepClick}
+				{onStopClick}
+				{onRunClick}
+				{onEndClick}
+			/>
+		</div>
 	</div>
 	<div class="lower-container">
 		<div class="jackcode-container">
-			Jack Code
+			<div class="label">JACK CODE</div>
 			<div class="CM-container">
 				<CodeMirror
 					doc={defaultJackcode}
@@ -226,18 +236,11 @@ populate this window`;
 				/>
 			</div>
 			<div class="btn-container">
-				<button
-					class="btn"
-					disabled={!pythonLoaded}
-					on:click={() => {
-						const res = compiler.compile_main($jackcodeStore);
-						bytecodeStore.set(res);
-					}}>Compile</button
-				>
+				<button class="btn" disabled={!pythonLoaded} on:click={onCompileClick}>Compile</button>
 			</div>
 		</div>
 		<div class="bytecode-container">
-			Compiled Bytecode
+			<div class="label">BYTECODE CODE</div>
 			<div class="CM-container">
 				<CodeMirror
 					doc={defaultBytecode}
@@ -247,22 +250,12 @@ populate this window`;
 				/>
 			</div>
 			<div class="btn-container">
-				<button
-					class="btn"
-					on:click={() => {
-						program = new Program($bytecodeStore, ctx, canvas);
-						programLoaded = true;
-						ramSize = program.ram_size();
-						ramPointer = program.ram();
-						memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
-					}}>Load program</button
-				>
+				<button class="btn" on:click={onLoadClick}>Load program</button>
 			</div>
 		</div>
 		<div class="display-container">
-			<div class="stack-container" />
 			<div class="memory-container">
-				Memory Display
+				<div class="label">MEMORY</div>
 				<div class="memory">
 					{#if memArray}
 						{#each memArray as cell, i}
@@ -301,12 +294,12 @@ populate this window`;
 		font-family: 'Courier New', 'Lucida Console', monospace;
 		font-size: 14px;
 		line-height: 1.2em;
-		--upper-container-height: 330px;
+		--upper-container-height: {scale * height + 800}px;
 		/* Hide scrollbar for IE, Edge and Firefox */
 		/* -ms-overflow-style: none; /* IE and Edge */
 		/* scrollbar-width: none; /* Firefox */
 	}
-/*
+	/*
 	::-webkit-scrollbar {
 		display: none;
 	}
@@ -315,13 +308,6 @@ populate this window`;
 		/* border: 1px solid rgb(119, 119, 119); */
 	}
 
-	a {
-		color: #00ff00;
-
-		&:hover {
-			text-decoration: none;
-		}
-	}
 
 	.app-container {
 		display: flex;
@@ -344,6 +330,19 @@ populate this window`;
 	.intro-text {
 		width: 75%;
 	}
+
+	.label {
+		margin-bottom: 12px;
+		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+		color:#838383
+	}
+
+	.nav_container {
+		display: flex;
+		flex-direction: row;
+		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+	}
+
 
 	.intro-container {
 		padding: 5px;
