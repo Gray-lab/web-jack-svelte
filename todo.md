@@ -23,7 +23,12 @@ Otherwise, keyboard output should go to the selected codemirror instance
     - Double size of canvas
     - Use clean sans-serif font for non-code stuff
     - Adjust colors
+        - anchor tags
     - Get rid of reset button
+    - codemirror cursor -> green
+    - set stepsize larger for firefox
+    - check safari
+    - deal with mobile with a popup
 
 3. add core functionality
     - ~~Bytecode updates on edit~~
@@ -41,6 +46,6 @@ Otherwise, keyboard output should go to the selected codemirror instance
     - Display call stack
     - Display input
     - Add dropdown for selecting programs
+        - 3 or 4 buttons with presets. Descriptions in About? 
     - Warning popup for losing changes when switching programs?
     - Implement the memory display using virtualized lists
-    - Add 

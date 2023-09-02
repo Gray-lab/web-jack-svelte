@@ -1,38 +1,44 @@
-# create-svelte
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+# web_jack
 
-## Creating a project
+## Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+Welcome to web_jack - a web based compiler and runtime for the Jack toy langauge from nand2tetris. Web_Jack combines a Svelte frontend with a compiler written in Python and a runtime implemented in Rust and compiled to WebAssembly (wasm). After finishing the nand2tetris book I wanted to try my hand at learning Rust and web development, and implementing a Jack virtual machine seemed like a great way to demonstrate what I learned and learn some more along the way. 
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Features
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+- **Svelte Frontend:** The project features a user interface built using Svelte.
+- **Jack Compiler:** The Python-based compiler is capable of parsing and translating Jack source code into bytecode, ready to be executed on the virtual machine.
+- **Rust Runtime:** The Rust-based runtime takes the compiled bytecode and executes it efficiently within a WebAssembly environment, ensuring optimal performance.
+- **Integration:** The frontend communicates with the compiled bytecode through WebAssembly, creating a holistic system where user interactions are processed and executed.
 
-## Developing
+## How to Use
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+1. **Clone the Repository:** Begin by cloning this repository to your local machine using the following command:
 
-```bash
-npm run dev
+    ```
+    git clone https://github.com/gray-lab/WEB-JACK-SVELTE.git
+    ```
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+2. **Install NPM Packages:** While in the root directory, install the required npm packages:
+    ```
+    npm --install
+    ```
 
-## Building
+3. **Build and Deploy:** The package.json file contains scripts to build and package the Rust files and build and deploy the Svelte frontend. For a local dev server run:
+    ```
+    npm run dev
+    ```
 
-To create a production version of your app:
+## Contributing
 
-```bash
-npm run build
-```
+I welcome contributions to enhance this project! If you have ideas, improvements, or bug fixes, feel free to create a pull request. 
 
-You can preview the production build with `npm run preview`.
+## Acknowledgments
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+I would like to express my gratitude to the creators of the Nand2Tetris course for inspiring this project, as well as the Svelte, Python, and Rust communities for providing the tools and resources necessary to bring this idea to life. I also want to thank all the awesome people at Recurse Center who encouraged and supported me while building this project.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute the code as needed.
+

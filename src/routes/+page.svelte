@@ -4,8 +4,12 @@
 	import { square_jack } from '$lib/jackcode.js';
 	import { myTheme } from '$lib/codeMirrorTheme.js';
 	import { onMount } from 'svelte';
+	import Button from '../lib/Button.svelte';
+	import ButtonContainer from '../lib/ButtonContainer.svelte';
 	import CodeMirror, { basicSetup, minimalSetup, EditorView } from '../lib/CodeMirror.svelte';
 	import CanvasDisplay from '../lib/CanvasDisplay.svelte';
+	import MemoryCell from '../lib/MemoryCell.svelte';
+	import Modal from '../lib/Modal.svelte';
 
 	// Canvas scale (1.0 -> 512px x 256px)
 	const scale = 1.5;
@@ -29,9 +33,82 @@ populate this window`;
 	let running = false;
 	let programLoaded = false;
 	let pythonLoaded = false;
+	let compiled = false;
+	let showWindowWarning = true;
+	let showInstructions = true;
 	$: showMem = false;
-	$: memArray = [];
+	$: memArray = new Array(256).fill(0);
 	$: stepCount = 30;
+
+	export let upper_container_height = scale * height + 100;
+
+	// button and keyboard handlers
+	
+		function onKeyDown(e) {
+			if (running) e.preventDefault();
+			console.log(e.key);
+			if (e.key.length === 1) {
+				currentKey = e.key.charCodeAt(0);
+			} else if (e.key in input_map) {
+				currentKey = input_map[e.key];
+			}
+		}
+
+		function onKeyUp(e) {
+			if (running) e.preventDefault();
+			currentKey = 0;
+		}
+
+		function onStepClick() {
+			runLoop(1);
+			memArray = memArray; // assignment triggers reactive update in Svelte
+		}
+
+		function onRunClick() {
+			running = true;
+			interval = setInterval(() => {
+				requestAnimationFrame(runLoopCallback);
+				const finished = program.finished;
+				if (finished) {
+					running = false;
+					clearInterval(interval);
+					memArray = memArray;
+				}
+			}, 0);
+		}
+
+		function onStopClick() {
+			running = false;
+			clearInterval(interval);
+			memArray = memArray;
+		}
+
+		function onEndClick() {
+			running = false;
+			programLoaded = false;
+			program.end();
+			clearInterval(interval);
+			memArray = memArray;
+		}
+
+		function onCompileClick() {
+			compiled = true;
+			const res = compiler.compile_main($jackcodeStore);
+			bytecodeStore.set(res);
+		}
+
+		function onLoadClick() {
+			program = new Program($bytecodeStore, ctx, canvas);
+			programLoaded = true;
+			ramSize = program.ram_size();
+			ramPointer = program.ram();
+			memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
+		}
+
+		function changeHandler({ detail: { tr } }) {
+			// nothing we need to do here
+		}
+	
 
 	// Keyboard input map for non-standard mappings
 	const input_map = {
@@ -62,69 +139,7 @@ populate this window`;
 		F12: 152
 	};
 
-	function onKeyDown(e) {
-		if (running) e.preventDefault();
-		console.log(e.key);
-		if (e.key.length === 1) {
-			currentKey = e.key.charCodeAt(0);
-		} else if (e.key in input_map) {
-			currentKey = input_map[e.key];
-		}
-	}
-
-	function onKeyUp(e) {
-		if (running) e.preventDefault();
-		currentKey = 0;
-	}
-
-	function onStepClick() {
-		runLoop(1);
-		memArray = memArray; // assignment triggers reactive update in Svelte
-	}
-
-	function onRunClick() {
-		running = true;
-		interval = setInterval(() => {
-			requestAnimationFrame(runLoopCallback);
-			const finished = program.finished;
-			if (finished) {
-				running = false;
-				clearInterval(interval);
-				memArray = memArray;
-			}
-		}, 0);
-	}
-
-	function onStopClick() {
-		running = false;
-		clearInterval(interval);
-		memArray = memArray;
-	}
-
-	function onEndClick() {
-		running = false;
-		program.end();
-		clearInterval(interval);
-		memArray = memArray;
-	}
-
-	function onCompileClick() {
-		const res = compiler.compile_main($jackcodeStore);
-		bytecodeStore.set(res);
-	}
-
-	function onLoadClick() {
-		program = new Program($bytecodeStore, ctx, canvas);
-		programLoaded = true;
-		ramSize = program.ram_size();
-		ramPointer = program.ram();
-		memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
-	}
-
-	function changeHandler({ detail: { tr } }) {
-		// nothing we need to do here
-	}
-
+	// main run loop
 	function runLoop(stepCount) {
 		// runs stepCount instructions for every animation frame
 		for (let i = 0; i < stepCount; i++) {
@@ -138,6 +153,10 @@ populate this window`;
 	}
 
 	onMount(async () => {
+		showWindowWarning = document.documentElement.clientWidth < 1000;
+		console.log(document.documentElement.clientWidth, showWindowWarning);
+		showInstructions = !showWindowWarning;
+
 		wasmInstance = await init(); // init initializes memory addresses needed by WASM and that will be used by JS/TS
 		console.log(wasmInstance); // wasmInstance.memory gives us direct access to the memory underlying the jack runtime
 
@@ -186,89 +205,111 @@ populate this window`;
 <!-- need to have this only prevent default if a program is running -->
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
 
-<div class="app-container">
-	<div class="upper-container">
-		<div class="intro-container">
-			<div class="nav_container">
-				<h3 class="title">{"{web_jack}"}</h3>
-				<div><a>about</a></div>
-				<div><a>github</a></div>
-			</div>
-			<p class="intro-text">
-				While working on the (excellent) nand2tetris course I thought that it would be great if
-				there was a way to compile, run, and explore Jack programs on the web.
-				<br /><br />
-				Here you can compile and run Jack code. Most Jack programs should behave as expected, but please
-				let me know if you find any surprises!
-				<br /><br />
-				This page is built using Sveltekit, with compilation handled by Python and code-execution and
-				display handled by Rust compiled to web assembly.
-				<br /><br />
-				Happy hacking -
-				<a href="https://github.com/Gray-lab" rel="noopener noreferrer" target="_blank">Martin</a>
-			</p>
-		</div>
-		<div class="canvas-container">
-			<div class="label">STUFF RUNS HERE</div>
-			<CanvasDisplay
-				bind:canvas
-				{programLoaded}
-				{running}
-				{width}
-				{height}
-				{scale}
-				{onStepClick}
-				{onStopClick}
-				{onRunClick}
-				{onEndClick}
-			/>
-		</div>
+<Modal bind:showModal={showWindowWarning}>
+	<p>This website has not been designed for mobile or narrow screens - everything might break</p>
+</Modal>
+
+<Modal bind:showModal={showInstructions}>
+	<div>
+		<ol>
+			<li>Thing 1</li>
+			<li>Thing 2</li>
+			<li>Thing 3</li>
+		</ol>
 	</div>
-	<div class="lower-container">
-		<div class="jackcode-container">
-			<div class="label">JACK CODE</div>
-			<div class="CM-container">
-				<CodeMirror
-					doc={defaultJackcode}
-					bind:docStore={jackcodeStore}
-					extensions={[basicSetup, myTheme]}
-					on:change={changeHandler}
+</Modal>
+
+<div class="app-container">
+	<div class="inner-container">
+		<div class="upper-container" style="--upper-container-height: {upper_container_height}px;">
+			<div class="intro-container default-txt">
+				<div class="nav-container">
+					<h3 class="title">{'web_jack'}</h3>
+					<div class="nav-item"><a href="/about">About</a></div>
+					<div class="nav-item">
+						<a href="https://www.github.com/Gray-lab" rel="noopener noreferrer" target="_blank"
+							>My Github</a
+						>
+					</div>
+				</div>
+				<p class="intro-text">
+					While working on the (excellent) nand2tetris course I thought that it would be great if
+					there was a way to compile, run, and explore Jack programs on the web.
+					<br /><br />
+					Here you can compile and run Jack code. Most Jack programs should behave as expected, but please
+					let me know if you find any surprises!
+					<br /><br />
+					This page is built using Sveltekit, with compilation handled by Python and code-execution and
+					display handled by Rust compiled to web assembly.
+					<br /><br />
+					Happy hacking -
+					<a href="https://github.com/Gray-lab" rel="noopener noreferrer" target="_blank">Martin</a>
+				</p>
+				<Button label={'What do I do?'} onClick={() => {showInstructions = true}}/>
+			</div>
+			<div class="canvas-container">
+				<div class="label">DISPLAY</div>
+				<CanvasDisplay
+					bind:canvas
+					{programLoaded}
+					{running}
+					{width}
+					{height}
+					{scale}
+					{onStepClick}
+					{onStopClick}
+					{onRunClick}
+					{onEndClick}
 				/>
 			</div>
-			<div class="btn-container">
-				<button class="btn" disabled={!pythonLoaded} on:click={onCompileClick}>Compile</button>
-			</div>
 		</div>
-		<div class="bytecode-container">
-			<div class="label">BYTECODE CODE</div>
-			<div class="CM-container">
-				<CodeMirror
-					doc={defaultBytecode}
-					bind:docStore={bytecodeStore}
-					extensions={[basicSetup, myTheme]}
-					on:change={changeHandler}
-				/>
+		<div class="lower-container" style="--upper-container-height: {upper_container_height}px;">
+			<div class="jackcode-container">
+				<div class="label">JACK EDITOR</div>
+				<div class="CM-container code-height">
+					<CodeMirror
+						doc={defaultJackcode}
+						bind:docStore={jackcodeStore}
+						extensions={[basicSetup, myTheme]}
+						on:change={changeHandler}
+					/>
+				</div>
+				<ButtonContainer>
+					<Button label={'Compile'} onClick={onCompileClick} disabled={!pythonLoaded} />
+				</ButtonContainer>
 			</div>
-			<div class="btn-container">
-				<button class="btn" on:click={onLoadClick}>Load program</button>
+			<!-- pull out as editor component -->
+			<div class="bytecode-container">
+				<div class="label">BYTECODE EDITOR</div>
+				<div class="CM-container code-height">
+					<CodeMirror
+						doc={defaultBytecode}
+						bind:docStore={bytecodeStore}
+						extensions={[basicSetup, myTheme]}
+						on:change={changeHandler}
+					/>
+				</div>
+				<ButtonContainer>
+					<Button label={'Load Program'} onClick={onLoadClick} disabled={!compiled} />
+				</ButtonContainer>
 			</div>
-		</div>
-		<div class="display-container">
-			<div class="memory-container">
-				<div class="label">MEMORY</div>
-				<div class="memory">
-					{#if memArray}
-						{#each memArray as cell, i}
-							<div class="cell">
+			<div class="display-container">
+				<div class="memory-container">
+					<div class="label">MEMORY VALUES</div>
+					<div class="memory">
+						{#if memArray}
+							{#each memArray as cell, i}
+								<MemoryCell {i} {cell} />
+								<!-- <div class="cell">
 								<span class="index">{i}</span>
 								<span class="value">{cell.toString(10)}</span>
-							</div>
-						{/each}
-					{:else}
-						<p>memArray was empty</p>
-					{/if}
-				</div>
-				<!-- <div class="stack-container">
+							</div> -->
+							{/each}
+						{:else}
+							<p>memArray was empty</p>
+						{/if}
+					</div>
+					<!-- <div class="stack-container">
 					<div class="memory">
 						{#if memArray}
 							{#each memArray as cell, i}
@@ -279,8 +320,9 @@ populate this window`;
 						{/if}
 					</div>
 				</div> -->
-				<div class="active-key-container" />
-				<div class="call-stack-container" />
+					<div class="active-key-container" />
+					<div class="call-stack-container" />
+				</div>
 			</div>
 		</div>
 	</div>
@@ -289,31 +331,48 @@ populate this window`;
 <style>
 	:global(body) {
 		overflow: hidden;
-		color: rgb(0, 255, 0);
-		background-color: rgb(49, 49, 49);
-		font-family: 'Courier New', 'Lucida Console', monospace;
 		font-size: 14px;
 		line-height: 1.2em;
-		--upper-container-height: {scale * height + 800}px;
+		color-scheme: dark;
+		--height-offset: 140px;
+		background-color: rgb(49, 49, 49);
 		/* Hide scrollbar for IE, Edge and Firefox */
 		/* -ms-overflow-style: none; /* IE and Edge */
 		/* scrollbar-width: none; /* Firefox */
 	}
-	/*
-	::-webkit-scrollbar {
-		display: none;
-	}
-*/
+
 	:global(div) {
 		/* border: 1px solid rgb(119, 119, 119); */
 	}
 
+	a:link,
+	a:visited {
+		color: rgb(0, 156, 0);
+		text-decoration: none;
+	}
+
+	a:hover,
+	a:active {
+		color: #00ff00;
+		text-decoration: none;
+	}
 
 	.app-container {
+		align-content: center;
+		background-color: rgb(49, 49, 49);
+		height: 100vh;
+		width: 100vw;
+	}
+
+	.inner-container {
 		display: flex;
 		flex-direction: column;
-		height: 100vh - 10px;
-		width: 100vw - 10px;
+		max-width: 1400px;
+		height: 99%;
+		margin: auto;
+		padding: 10px 40px;
+		background-color: rgb(49, 49, 49);
+		/* border: 1px dashed black; */
 	}
 
 	.upper-container {
@@ -321,39 +380,8 @@ populate this window`;
 		flex-direction: row;
 		height: var(--upper-container-height);
 		width: 100%;
-	}
-
-	.canvas-container {
-		padding: 0px 10px;
-	}
-
-	.intro-text {
-		width: 75%;
-	}
-
-	.label {
-		margin-bottom: 12px;
-		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-		color:#838383
-	}
-
-	.nav_container {
-		display: flex;
-		flex-direction: row;
-		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-	}
-
-
-	.intro-container {
-		padding: 5px;
-		flex-grow: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		color: #e3e3e3;
-		box-sizing: content-box;
-		overflow: hidden;
-		text-align: center;
+		padding-bottom: 20px;
+		border-bottom: 1px solid #202020;
 	}
 
 	.lower-container {
@@ -362,87 +390,82 @@ populate this window`;
 		flex-grow: 1;
 		max-height: calc(100vh - var(--upper-container-height));
 		width: 100%;
+		padding-top: 20px;
+	}
+
+	.default-txt {
+		font-family: 'Open Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva,
+			Verdana, sans-serif;
+		color: #afafaf;
+	}
+
+	.label {
+		font-family: 'Open Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva,
+			Verdana, sans-serif;
+		margin-bottom: 12px;
+		color: #afafaf;
+	}
+
+	.nav-container {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: start;
+	}
+
+	.nav-item {
+		padding-left: 36px;
+	}
+
+	.intro-container {
+		padding: 0px 16px 8px 0px;
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		box-sizing: content-box;
+		/* overflow: hidden; */
+		/* text-align: center; */
 	}
 
 	.bytecode-container {
 		display: flex;
 		flex-direction: column;
-		padding-left: 10px;
-		width: 320px;
+		padding: 0px 16px;
+		max-width: 400px;
+		min-width: 320px;
 	}
 
 	.jackcode-container {
 		display: flex;
 		flex-direction: column;
-		padding-left: 10px;
+		padding: 0px 16px 0px 0px;
 		min-width: 300px;
-		max-width: 700px;
 		overflow-x: auto;
 		flex-grow: 1;
+		/* height: calc(100vh - var(--upper-container-height) - 70px); */
 	}
 
 	.CM-container {
-		height: calc(100vh - var(--upper-container-height) - 70px);
-	}
-
-	.btn-container {
-		gap: 5px;
-		display: flex;
-		width: 100%;
-		height: auto;
-		flex-direction: row;
-		justify-content: flex-end;
-		padding-top: 10px;
+		height: calc(100% - var(--height-offset));
 	}
 
 	.memory-container {
-		height: 100%;
-		padding-left: 10px;
 		display: flex;
+		height: 100%;
+		padding: 0px 0px 0px 16px;
+		max-width: 400px;
+		min-width: 320px;
 		flex-direction: column;
 	}
 
 	.memory {
-		width: 220px;
-		height: calc(100vh - var(--upper-container-height) - 72px);
-		border: 1px solid black;
+		max-width: 400px;
+		min-width: 320px;
+		height: calc(100% - var(--height-offset));
+		/* height: calc(100vh - var(--upper-container-height) - 72px); */
 		background-color: #202020;
 		overflow-y: auto;
 		overflow-x: hidden;
-	}
-	.cell {
-		/* border-bottom: 1px solid black; */
-		display: flex;
-		/* justify-content: space-between; */
-	}
-
-	.index {
-		padding: 1px 5px;
-		text-align: right;
-		color: #e3e3e3;
-		width: 50px;
-		border-right: 1px solid black;
-	}
-
-	.value {
-		padding: 1px 10px;
-		width: 100%;
-		border-bottom: 1px solid black;
-	}
-
-	button {
-		color: #e3e3e3;
-		background-color: #202020;
-		border: 1px solid #202020;
-		padding: 5px 20px;
-		border-radius: 5px;
-
-		&:hover {
-			border: 1px solid #00ff00;
-		}
-
-		&:active {
-			color: #00ff00;
-		}
 	}
 </style>
