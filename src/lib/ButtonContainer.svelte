@@ -1,4 +1,8 @@
-<div class="container">
+<script>
+	export let flexJustify = "flex-end";
+</script>
+
+<div class="container" style="--justify: {flexJustify}">
     <slot></slot>
 </div>
 
@@ -9,7 +13,7 @@
 		width: 100%;
 		height: auto;
 		flex-direction: row;
-		justify-content: flex-end;
+		justify-content: var(--justify);
 		padding-top: 16px;
 	}
 </style>
