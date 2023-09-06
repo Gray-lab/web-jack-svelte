@@ -250,7 +250,7 @@ populate this window */`;
 		<div class="upper-container" style="--upper-container-height: {upper_container_height}px;">
 			<div class="intro-container default-txt">
 				<div class="nav-container">
-					<h3 class="title">{'web_jack'}</h3>
+					<h3 class="title"><a href="/">web_jack</a></h3>
 					<div class="nav-item"><a href="/license">License</a></div>
 					<div class="nav-item">
 						<a href="https://www.github.com/Gray-lab" rel="noopener noreferrer" target="_blank"
@@ -277,12 +277,12 @@ populate this window */`;
 						onClick={() => {
 							showInstructions = true;
 						}}>Instructions</Button
-					>
+					>	
 				</div>
 
 				<div class="presets">
 					<p class="preset-header intro-text">
-						<strong>current preset: {jackCode.at(preset).name} </strong>
+						<strong>Current preset: {jackCode.at(preset).name} </strong>
 					</p>
 					<p class="preset-body intro-text">
 						{jackCode.at(preset).description}

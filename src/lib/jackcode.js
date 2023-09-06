@@ -1,44 +1,5 @@
 export const jackCode = [
 	{
-		name: 'Blank',
-		description:
-			'Write your own program in Jack! The entire standard library as described in Nand to Tetris is supported. Multiple classes can be included in the editor in a single file instead of having separate files. Clicking on a different preset will overwrite any edits, so copy and save your code locally if you want to retain it.',
-		code: 'Write your own Jack program here!'
-	},
-	{
-		name: 'Average',
-		description:
-			'Average calculator by Nisan and Schocken. Calculates the 16 bit integer average of an arbitrary number of 16 bit integers.',
-		code: `// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/11/Average/Main.jack
-
-// Inputs some numbers and computes their average
-class Main {
-   function void main() {
-      var Array a; 
-      var int length;
-      var int i, sum;
-
-      let length = Keyboard.readInt("How many numbers? ");
-      let a = Array.new(length); // constructs the array
-      
-      let i = 0;
-      while (i < length) {
-         let a[i] = Keyboard.readInt("Enter a number: ");
-         let sum = sum + a[i];
-         let i = i + 1;
-      }
-      
-      do Output.printString("The average is ");
-      do Output.printInt(sum / length);
-      return;
-   }
-}
-      `
-	},
-	{
 		name: 'Square',
 		description:
 			'Square Dance game by Nisan and Schocken. Use the arrow keys to move the square, Z to decrease size and X to increase size and Q to quit.',
@@ -707,5 +668,45 @@ class SnakeGame {
    }
 }   
 `
-	}
+   },
+
+{
+   name: 'Average',
+   description:
+      'Average calculator by Nisan and Schocken. Calculates the 16 bit integer average of an arbitrary number of 16 bit integers.',
+   code: `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/11/Average/Main.jack
+
+// Inputs some numbers and computes their average
+class Main {
+function void main() {
+   var Array a; 
+   var int length;
+   var int i, sum;
+
+   let length = Keyboard.readInt("How many numbers? ");
+   let a = Array.new(length); // constructs the array
+   
+   let i = 0;
+   while (i < length) {
+      let a[i] = Keyboard.readInt("Enter a number: ");
+      let sum = sum + a[i];
+      let i = i + 1;
+   }
+   
+   do Output.printString("The average is ");
+   do Output.printInt(sum / length);
+   return;
+}
+}
+   `
+},
+{
+   name: 'Custom',
+   description:
+      'Write your own program in Jack! The entire standard library as described in Nand to Tetris is supported. Multiple classes can be included in the editor in a single file instead of having separate files. Clicking on a different preset will overwrite any edits, so copy and save your code locally if you want to retain it.',
+   code: 'Write your own Jack program here!'
+},
 ];
