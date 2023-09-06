@@ -214,7 +214,10 @@ populate this window */`;
 
 <Modal bind:showModal={showWindowWarning} closeText="OK">
 	<div slot="body" class="modal-body default-txt">
-		<p>This website has not been designed for mobile or narrow windows</p>
+		<p>
+			This website works best on a desktop with a wider window. <br />Please increase your browser
+			width for an optimal experience.
+		</p>
 	</div>
 </Modal>
 
@@ -259,8 +262,10 @@ populate this window */`;
 					</div>
 				</div>
 				<p class="intro-text">
-					During my journey to become a software engineer, <a href="https://www.nand2tetris.org/" rel="noopener noreferrer" target="_blank"
-						>Nand to Tetris</a
+					During my journey to become a software engineer, <a
+						href="https://www.nand2tetris.org/"
+						rel="noopener noreferrer"
+						target="_blank">Nand to Tetris</a
 					>
 					was instrumental in showing me the joy of computing. Inspired by the work I did in that course,
 					this website lets anyone write, compile, and execute code written in the Jack language.
@@ -277,7 +282,7 @@ populate this window */`;
 						onClick={() => {
 							showInstructions = true;
 						}}>Instructions</Button
-					>	
+					>
 				</div>
 
 				<div class="presets">
