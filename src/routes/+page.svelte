@@ -1,7 +1,6 @@
 <script>
 	import init, { Program } from '../../jack-vm/pkg';
-	import { squareProgram, snakeProgram1, snakeProgram2 } from '$lib/bytecode.js';
-	import { square_jack } from '$lib/jackcode.js';
+	import { jackCode } from '$lib/jackcode.js';
 	import { myTheme } from '$lib/codeMirrorTheme.js';
 	import { onMount } from 'svelte';
 	import Button from '../lib/Button.svelte';
@@ -15,9 +14,7 @@
 	const scale = 1.5;
 	const width = 512;
 	const height = 256;
-	const defaultJackcode = square_jack;
-	const defaultBytecode = `compile Jack code to
-populate this window`;
+
 	let canvas;
 	let ctx;
 	let program;
@@ -34,81 +31,89 @@ populate this window`;
 	let programLoaded = false;
 	let pythonLoaded = false;
 	let compiled = false;
-	let showWindowWarning = true;
-	let showInstructions = true;
+	let showWindowWarning = false;
+	let showInstructions = false;
+
 	$: showMem = false;
 	$: memArray = new Array(256).fill(0);
 	$: stepCount = 30;
 
 	export let upper_container_height = scale * height + 100;
 
+	// set active preset from the jackCode array
+	$: preset = 1;
+	const defaultJackcode = jackCode.at(preset).code;
+	const defaultBytecode = `/* Compile Jack code to
+populate this window */`;
+
 	// button and keyboard handlers
-	
-		function onKeyDown(e) {
-			if (running) e.preventDefault();
-			console.log(e.key);
-			if (e.key.length === 1) {
-				currentKey = e.key.charCodeAt(0);
-			} else if (e.key in input_map) {
-				currentKey = input_map[e.key];
+
+	function onKeyDown(e) {
+		if (running) e.preventDefault();
+		console.log(e.key);
+		if (e.key.length === 1) {
+			currentKey = e.key.charCodeAt(0);
+		} else if (e.key in input_map) {
+			currentKey = input_map[e.key];
+		}
+	}
+
+	function onKeyUp(e) {
+		if (running) e.preventDefault();
+		currentKey = 0;
+	}
+
+	function onStepClick() {
+		runLoop(1);
+		memArray = memArray; // assignment triggers reactive update in Svelte
+	}
+
+	function onRunClick() {
+		running = true;
+		interval = setInterval(() => {
+			requestAnimationFrame(runLoopCallback);
+			const finished = program.finished;
+			if (finished) {
+				running = false;
+				clearInterval(interval);
+				memArray = memArray;
 			}
-		}
+		}, 0);
+	}
 
-		function onKeyUp(e) {
-			if (running) e.preventDefault();
-			currentKey = 0;
-		}
+	function onStopClick() {
+		running = false;
+		clearInterval(interval);
+		memArray = memArray;
+	}
 
-		function onStepClick() {
-			runLoop(1);
-			memArray = memArray; // assignment triggers reactive update in Svelte
-		}
+	function onEndClick() {
+		running = false;
+		programLoaded = false;
+		program.end();
+		clearInterval(interval);
+		memArray = memArray;
+	}
 
-		function onRunClick() {
-			running = true;
-			interval = setInterval(() => {
-				requestAnimationFrame(runLoopCallback);
-				const finished = program.finished;
-				if (finished) {
-					running = false;
-					clearInterval(interval);
-					memArray = memArray;
-				}
-			}, 0);
-		}
+	function onCompileClick() {
+		compiled = true;
+		console.log('compiling...');
+		console.log($jackcodeStore);
+		const res = compiler.compile_main($jackcodeStore);
+		bytecodeStore.set(res);
+	}
 
-		function onStopClick() {
-			running = false;
-			clearInterval(interval);
-			memArray = memArray;
-		}
+	function onLoadClick() {
+		program = new Program($bytecodeStore, ctx, canvas);
+		programLoaded = true;
+		ramSize = program.ram_size();
+		ramPointer = program.ram();
+		memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
+	}
 
-		function onEndClick() {
-			running = false;
-			programLoaded = false;
-			program.end();
-			clearInterval(interval);
-			memArray = memArray;
-		}
-
-		function onCompileClick() {
-			compiled = true;
-			const res = compiler.compile_main($jackcodeStore);
-			bytecodeStore.set(res);
-		}
-
-		function onLoadClick() {
-			program = new Program($bytecodeStore, ctx, canvas);
-			programLoaded = true;
-			ramSize = program.ram_size();
-			ramPointer = program.ram();
-			memArray = new Int16Array(wasmInstance.memory.buffer, ramPointer, ramSize);
-		}
-
-		function changeHandler({ detail: { tr } }) {
-			// nothing we need to do here
-		}
-	
+	function changeHandler({ detail: { tr } }) {
+		// nothing we need to do here
+	}
 
 	// Keyboard input map for non-standard mappings
 	const input_map = {
@@ -153,12 +158,14 @@ populate this window`;
 	}
 
 	onMount(async () => {
-		showWindowWarning = document.documentElement.clientWidth < 1000;
-		console.log(document.documentElement.clientWidth, showWindowWarning);
-		showInstructions = !showWindowWarning;
+		// at less than 1080px width, canvas starts to be covered by edge of window
+		showWindowWarning = document.documentElement.clientWidth < 1080;
 
-		wasmInstance = await init(); // init initializes memory addresses needed by WASM and that will be used by JS/TS
-		console.log(wasmInstance); // wasmInstance.memory gives us direct access to the memory underlying the jack runtime
+		// init initializes memory addresses needed by WASM and that will be used by JS/TS
+		wasmInstance = await init();
+
+		// wasmInstance.memory gives us direct access to the memory underlying the jack runtime
+		// console.log(wasmInstance);
 
 		ctx = canvas.getContext('2d', {
 			willReadFrequently: true,
@@ -193,8 +200,8 @@ populate this window`;
 			`);
 
 		compiler = pyodide.pyimport('jack_analyzer');
-		console.log('Jack Compiler loaded');
 		pythonLoaded = true;
+		console.log('Jack Compiler loaded');
 	});
 </script>
 
@@ -206,16 +213,33 @@ populate this window`;
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
 
 <Modal bind:showModal={showWindowWarning}>
-	<p>This website has not been designed for mobile or narrow screens - everything might break</p>
+	<div class="modal default-txt">
+		<p>This website has not been designed for mobile or narrow screens - everything might break</p>
+	</div>
 </Modal>
 
 <Modal bind:showModal={showInstructions}>
-	<div>
+	<div class="modal default-txt">
 		<ol>
-			<li>Thing 1</li>
-			<li>Thing 2</li>
-			<li>Thing 3</li>
+			<li>Select a sample program or write your own using the Blank preset</li>
+			<li>Once the Jack code is ready, click Compile to compile to bytecode</li>
+			<li>
+				The bytecode can be edited freely. When you are ready to run the program, click load program
+				to initialize the runtime. This will initialize the memory and prepare to execute the
+				bytecode instructions.
+			</li>
+			<li>
+				When the program is loaded it can either be stepped through instruction by instruction using
+				the Step button, or Run. Stepping will update the memory display at each step, while running
+				will only update the memory when the program is paused.
+			</li>
 		</ol>
+		<br />
+		<p>
+			Note that loading a new preset will clear any edits. Copy and paste the code to save it
+			locally if you want to retain any changes.
+		</p>
+		<br />
 	</div>
 </Modal>
 
@@ -225,7 +249,7 @@ populate this window`;
 			<div class="intro-container default-txt">
 				<div class="nav-container">
 					<h3 class="title">{'web_jack'}</h3>
-					<div class="nav-item"><a href="/about">About</a></div>
+					<div class="nav-item"><a href="/about">License</a></div>
 					<div class="nav-item">
 						<a href="https://www.github.com/Gray-lab" rel="noopener noreferrer" target="_blank"
 							>My Github</a
@@ -233,19 +257,40 @@ populate this window`;
 					</div>
 				</div>
 				<p class="intro-text">
-					While working on the (excellent) nand2tetris course I thought that it would be great if
-					there was a way to compile, run, and explore Jack programs on the web.
-					<br /><br />
-					Here you can compile and run Jack code. Most Jack programs should behave as expected, but please
-					let me know if you find any surprises!
-					<br /><br />
-					This page is built using Sveltekit, with compilation handled by Python and code-execution and
-					display handled by Rust compiled to web assembly.
-					<br /><br />
-					Happy hacking -
-					<a href="https://github.com/Gray-lab" rel="noopener noreferrer" target="_blank">Martin</a>
+					During my journey to become a software engineer, <a href="https://www.nand2tetris.org/"
+						>Nand to Tetris</a
+					>
+					was instrumental in showing me the joy of computing. Inspired by the work I did in that course,
+					this website lets anyone write, compile, and execute code written in the Jack language.
+					<br />
+					<br />
+					Happy hacking
 				</p>
-				<Button label={'What do I do?'} onClick={() => {showInstructions = true}}/>
+				<div class="instruction-button">
+					<Button
+						onClick={() => {
+							showInstructions = true;
+						}}>Instructions</Button
+					>
+				</div>
+				<div class="presets">
+					<p class="intro-text">
+						Program preset: {preset}
+					</p>
+					<ButtonContainer>
+						{#each jackCode as sample, i}
+							<Button
+								onClick={() => {
+									preset = i;
+									jackcodeStore.set(sample.code);
+									bytecodeStore.set(defaultBytecode);
+									programLoaded = false;
+									compiled = false;
+								}}>{sample.name}</Button
+							>
+						{/each}
+					</ButtonContainer>
+				</div>
 			</div>
 			<div class="canvas-container">
 				<div class="label">DISPLAY</div>
@@ -275,7 +320,7 @@ populate this window`;
 					/>
 				</div>
 				<ButtonContainer>
-					<Button label={'Compile'} onClick={onCompileClick} disabled={!pythonLoaded} />
+					<Button onClick={onCompileClick} disabled={!pythonLoaded}>Compile</Button>
 				</ButtonContainer>
 			</div>
 			<!-- pull out as editor component -->
@@ -290,38 +335,17 @@ populate this window`;
 					/>
 				</div>
 				<ButtonContainer>
-					<Button label={'Load Program'} onClick={onLoadClick} disabled={!compiled} />
+					<Button onClick={onLoadClick} disabled={!compiled}>Load Program</Button>
 				</ButtonContainer>
 			</div>
 			<div class="display-container">
 				<div class="memory-container">
 					<div class="label">MEMORY VALUES</div>
 					<div class="memory">
-						{#if memArray}
-							{#each memArray as cell, i}
-								<MemoryCell {i} {cell} />
-								<!-- <div class="cell">
-								<span class="index">{i}</span>
-								<span class="value">{cell.toString(10)}</span>
-							</div> -->
-							{/each}
-						{:else}
-							<p>memArray was empty</p>
-						{/if}
+						{#each memArray as cell, i}
+							<MemoryCell {i} {cell} />
+						{/each}
 					</div>
-					<!-- <div class="stack-container">
-					<div class="memory">
-						{#if memArray}
-							{#each memArray as cell, i}
-								<p class="cell">{i}: {cell.toString(10).padStart(16, '0')}</p>
-							{/each}
-						{:else}
-							<p>memArray was empty</p>
-						{/if}
-					</div>
-				</div> -->
-					<div class="active-key-container" />
-					<div class="call-stack-container" />
 				</div>
 			</div>
 		</div>
@@ -341,8 +365,10 @@ populate this window`;
 		/* scrollbar-width: none; /* Firefox */
 	}
 
-	:global(div) {
-		/* border: 1px solid rgb(119, 119, 119); */
+	.modal {
+		font-size: 14px;
+		line-height: 1.2em;
+		background-color: rgb(49, 49, 49);
 	}
 
 	a:link,
@@ -411,6 +437,7 @@ populate this window`;
 		flex-direction: row;
 		align-items: center;
 		justify-content: start;
+		width: 100%;
 	}
 
 	.nav-item {
@@ -418,14 +445,26 @@ populate this window`;
 	}
 
 	.intro-container {
-		padding: 0px 16px 8px 0px;
+		padding: 0px 32px 0px 0px;
 		flex-grow: 1;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		justify-content: space-between;
 		box-sizing: content-box;
-		/* overflow: hidden; */
-		/* text-align: center; */
+	}
+
+	.instruction-button {
+		display: flex;
+		justify-content: start;
+		width: 100%;
+		padding-bottom: 16px;
+	}
+
+	.presets {
+		border-top: 1px solid #202020;
+		width: 100%;
+		flex-grow: 1;
 	}
 
 	.bytecode-container {
