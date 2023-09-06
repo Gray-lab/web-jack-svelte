@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 	import Button from '../lib/Button.svelte';
 	import ButtonContainer from '../lib/ButtonContainer.svelte';
-	import CodeMirror, { basicSetup, minimalSetup, EditorView } from '../lib/CodeMirror.svelte';
+	import CodeMirror, { basicSetup } from '../lib/CodeMirror.svelte';
 	import CanvasDisplay from '../lib/CanvasDisplay.svelte';
 	import MemoryCell from '../lib/MemoryCell.svelte';
 	import Modal from '../lib/Modal.svelte';
@@ -47,7 +47,6 @@
 populate this window */`;
 
 	// button and keyboard handlers
-
 	function onKeyDown(e) {
 		if (running) e.preventDefault();
 		console.log(e.key);
@@ -65,7 +64,8 @@ populate this window */`;
 
 	function onStepClick() {
 		runLoop(1);
-		memArray = memArray; // assignment triggers reactive update in Svelte
+		// assignment triggers reactive update in Svelte
+		memArray = memArray;
 	}
 
 	function onRunClick() {
@@ -219,27 +219,29 @@ populate this window */`;
 </Modal>
 
 <Modal bind:showModal={showInstructions}>
-	<div class="modal default-txt">
+	<div slot="header" class="modal-header default-txt">Instructions</div>
+	<div slot="body" class="modal-body default-txt">
 		<ol>
 			<li>Select a sample program or write your own using the Blank preset</li>
+			<br />
 			<li>Once the Jack code is ready, click Compile to compile to bytecode</li>
+			<br />
 			<li>
 				The bytecode can be edited freely. When you are ready to run the program, click load program
 				to initialize the runtime. This will initialize the memory and prepare to execute the
 				bytecode instructions.
 			</li>
+			<br />
 			<li>
 				When the program is loaded it can either be stepped through instruction by instruction using
 				the Step button, or Run. Stepping will update the memory display at each step, while running
 				will only update the memory when the program is paused.
 			</li>
 		</ol>
-		<br />
 		<p>
 			Note that loading a new preset will clear any edits. Copy and paste the code to save it
 			locally if you want to retain any changes.
 		</p>
-		<br />
 	</div>
 </Modal>
 
@@ -365,10 +367,20 @@ populate this window */`;
 		/* scrollbar-width: none; /* Firefox */
 	}
 
-	.modal {
+	.modal-header {
+		font-size: 16px;
+		line-height: 1.2em;
+		background-color: rgb(49, 49, 49);
+		border-bottom: 1px solid #202020;
+		padding-bottom: 8px;
+	}
+
+	.modal-body {
 		font-size: 14px;
 		line-height: 1.2em;
 		background-color: rgb(49, 49, 49);
+		border-bottom: 1px solid #202020;
+		margin-bottom: 16px;
 	}
 
 	a:link,

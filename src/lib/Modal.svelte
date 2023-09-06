@@ -17,14 +17,14 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
 		<slot name="header" />
-		<slot />
+		<slot name="body"/>
 		<Button style={'display: block;'} onClick={() => dialog.close()}>{closeText}</Button>
 	</div>
 </dialog>
 
 <style>
 	dialog {
-		max-width: 32em;
+		max-width: 40em;
 		border: none;
 		padding: 20px 40px;
 		background-color: rgb(49, 49, 49);
