@@ -1,4 +1,6 @@
 <script>
+	import Button from './Button.svelte';
+	export let closeText = 'Close';
 	export let showModal; // boolean
 
 	let dialog; // HTMLDialogElement
@@ -15,23 +17,20 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
 		<slot name="header" />
-		<hr />
 		<slot />
-		<hr />
-		<!-- svelte-ignore a11y-autofocus -->
-		<button autofocus on:click={() => dialog.close()}>close modal</button>
+		<Button style={'display: block;'} onClick={() => dialog.close()}>{closeText}</Button>
 	</div>
 </dialog>
 
 <style>
 	dialog {
 		max-width: 32em;
-		border-radius: 0.2em;
 		border: none;
-		padding: 0;
+		padding: 20px 40px;
+		background-color: rgb(49, 49, 49);
 	}
 	dialog::backdrop {
-		background: rgba(0, 0, 0, 0.3);
+		background: rgba(0, 0, 0, 0.5);
 	}
 	dialog > div {
 		padding: 1em;
@@ -41,7 +40,7 @@
 	}
 	@keyframes zoom {
 		from {
-			transform: scale(0.95);
+			transform: scale(0.75);
 		}
 		to {
 			transform: scale(1);
@@ -57,8 +56,5 @@
 		to {
 			opacity: 1;
 		}
-	}
-	button {
-		display: block;
 	}
 </style>
