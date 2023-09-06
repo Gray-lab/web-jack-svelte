@@ -1,14 +1,14 @@
 <!-- CanvasDisplay.svelte -->
 <script>
-	import Button from './Button.svelte';	
+	import Button from './Button.svelte';
 	import ButtonContainer from './ButtonContainer.svelte';
-
 
 	export let canvas;
 	export let width = 512;
 	export let height = 256;
 	export let scale = 1;
 	export let programLoaded = false;
+	export let running = false;
 	export let onStepClick;
 	export let onRunClick;
 	export let onStopClick;
@@ -24,9 +24,9 @@
 		style="width: {width * scale}px; height: {height * scale}px;"
 	/>
 	<ButtonContainer>
-		<Button label={"Step"} onClick={onStepClick} disabled={!programLoaded} style={"default"}/> 
-		<Button label={"Run"} onClick={onRunClick} disabled={!programLoaded} style={"default"}/>
-		<Button label={"Stop"} onClick={onStopClick} disabled={!programLoaded} style={"default"}/>
-		<Button label={"End"} onClick={onEndClick} disabled={!programLoaded} style={"default"}/>
+		<Button onClick={onRunClick} disabled={!programLoaded} style={'default'}>Run</Button>
+		<Button onClick={onStopClick} disabled={!programLoaded || !running} style={'default'}>Pause</Button>
+		<Button onClick={onStepClick} disabled={!programLoaded} style={'default'}>Step</Button>
+		<Button onClick={onEndClick} disabled={!programLoaded} style={'default'}>End</Button>
 	</ButtonContainer>
 </div>
