@@ -41,8 +41,8 @@
 	export let upper_container_height = scale * height + 100;
 
 	// set active preset from the jackCode array
-	$: preset = 1;
-	const defaultJackcode = jackCode.at(preset).code;
+	$: preset = 0;
+	$: defaultJackcode = jackCode.at(preset).code;
 	const defaultBytecode = `/* Compile Jack code to
 populate this window */`;
 
@@ -212,9 +212,9 @@ populate this window */`;
 <!-- need to have this only prevent default if a program is running -->
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
 
-<Modal bind:showModal={showWindowWarning}>
-	<div class="modal default-txt">
-		<p>This website has not been designed for mobile or narrow screens - everything might break</p>
+<Modal bind:showModal={showWindowWarning} closeText="OK">
+	<div slot="body" class="modal-body default-txt">
+		<p>This website has not been designed for mobile or narrow windows</p>
 	</div>
 </Modal>
 
@@ -251,7 +251,7 @@ populate this window */`;
 			<div class="intro-container default-txt">
 				<div class="nav-container">
 					<h3 class="title">{'web_jack'}</h3>
-					<div class="nav-item"><a href="/about">License</a></div>
+					<div class="nav-item"><a href="/license">License</a></div>
 					<div class="nav-item">
 						<a href="https://www.github.com/Gray-lab" rel="noopener noreferrer" target="_blank"
 							>My Github</a
@@ -259,7 +259,7 @@ populate this window */`;
 					</div>
 				</div>
 				<p class="intro-text">
-					During my journey to become a software engineer, <a href="https://www.nand2tetris.org/"
+					During my journey to become a software engineer, <a href="https://www.nand2tetris.org/" rel="noopener noreferrer" target="_blank"
 						>Nand to Tetris</a
 					>
 					was instrumental in showing me the joy of computing. Inspired by the work I did in that course,
@@ -267,6 +267,10 @@ populate this window */`;
 					<br />
 					<br />
 					Happy hacking
+					<br />
+					<br />
+					<br />
+					<br />
 				</p>
 				<div class="instruction-button">
 					<Button
@@ -275,11 +279,16 @@ populate this window */`;
 						}}>Instructions</Button
 					>
 				</div>
+
 				<div class="presets">
-					<p class="intro-text">
-						Program preset: {preset}
+					<p class="preset-header intro-text">
+						<strong>current preset: {jackCode.at(preset).name} </strong>
 					</p>
-					<ButtonContainer>
+					<p class="preset-body intro-text">
+						{jackCode.at(preset).description}
+					</p>
+
+					<ButtonContainer flexJustify="flex-start">
 						{#each jackCode as sample, i}
 							<Button
 								onClick={() => {
@@ -474,8 +483,20 @@ populate this window */`;
 	}
 
 	.presets {
+		display: flex;
+		flex-direction: column;
+		color: #707070;
 		border-top: 1px solid #202020;
 		width: 100%;
+		flex-grow: 1;
+		justify-content: space-between;
+	}
+
+	.preset-header {
+		font-size: 16px;
+	}
+
+	.preset-body {
 		flex-grow: 1;
 	}
 
