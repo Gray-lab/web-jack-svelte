@@ -10,7 +10,7 @@ export let myTheme = EditorView.theme({
       caretColor: "rgb(0, 255, 0)"
     },
     "&.cm-focused .cm-cursor": {
-      borderLeftColor: "rgb(20, 20, 20)"
+      borderLeftColor: "rgb(0, 255, 0)"
     },
     "&.cm-focused .cm-selectionBackground, ::selection": {
       backgroundColor: "rgb(70, 70, 70)"
