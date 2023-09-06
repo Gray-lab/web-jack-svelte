@@ -19,10 +19,9 @@ class CompilationEngine:
     LL(2) parser. Frankly, we usually just need LL(1), but might as well make it LL(2) to deal with
     the few cases where we need that second token.
     """
-    def __init__(self, in_string: str) -> str:
+    def __init__(self, in_string: str):
         # creates the token generator from a string input
         self.token_gen = string_tokenizer(in_string)
-        #self.writer = VMwriter(out_file)
         self.current_token = None
         self.next_token = None
         
@@ -31,8 +30,11 @@ class CompilationEngine:
         self.subroutine_table = SymbolTable()
 
         # Load the first two tokens
-        self.get_next_token()
-        self.get_next_token()
+        try:
+            self.get_next_token()
+            self.get_next_token()   
+        except StopIteration as e:
+            raise e
 
         # Initialize symbol state variables
         self.current_class = None
@@ -49,8 +51,12 @@ class CompilationEngine:
         self.result = ""
 
     def compile(self) -> str:
-        self.compile_file()
-        return self.result
+        try:
+            self.compile_file()
+            return self.result
+        except SyntaxError as e:
+            raise e
+        
 
     def get_next_token(self) -> None:
         """
@@ -60,10 +66,13 @@ class CompilationEngine:
         # Grab the new token
         try:
             self.next_token = next(self.token_gen)
-        except (StopIteration):
-            # if we run out of tokens we have reached thesymbol_type end of the file and 
+        except StopIteration:
+            # if we run out of tokens we have reached the end of the file and 
             # compileClass will wrap up and return
             pass
+        except Exception as e:
+            raise e
+
 
     def consume_token(self, token_label, token_val=[]) -> None:
         """
@@ -112,9 +121,11 @@ class CompilationEngine:
                 # self.result += (str(self.current_token))
             self.get_next_token()
         else:
+            # a Syntax error without explicit handling in pyodide just leaves the page hanging
             raise SyntaxError(f"\n\
                 expected: <{token_label}> {token_val} </{token_label}>\n\
                 received: <{self.current_token.label}> {self.current_token.value} </{self.current_token.label}>")
+
 
     def compile_type(self):
         """
@@ -158,8 +169,8 @@ class CompilationEngine:
             self.compile_class_var_dec()
 
         #=====Debugging print of class table====#
-        print("Class symbol table:")
-        print(self.class_table)
+        # print("Class symbol table:")
+        # print(self.class_table)
 
         while self.current_token.value in ["constructor", "function", "method"]:
             self.compile_subroutine()

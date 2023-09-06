@@ -46,8 +46,6 @@ def remove_comments_and_whitespace(input_string: str) -> queue.SimpleQueue:
     # Adapted from https://leetcode.com/problems/remove-comments/discuss/109195/1-liners
     clean_source = queue.SimpleQueue()
     res = filter(None, re.sub('/\*(.|\n)*?\*/', '', source))
-    # string_res = "".join(res)
-    # print(string_res)
     for ch in res:
         # Cleaned text is directly placed into a queue
         clean_source.put(ch)
@@ -59,6 +57,9 @@ def get_token_generator(text: queue.SimpleQueue) -> Generator:
     while the text is not empty
     """
     consume_flag = False
+    if text.empty():
+        # can't continue with an empty queue
+        raise SyntaxError("Compiler did not find any valid tokens")
     ch = text.get()
     while not text.empty():
         # If looping from a keyword, identifier, or literal don't consume another character
@@ -102,3 +103,4 @@ def get_token_generator(text: queue.SimpleQueue) -> Generator:
 
         else:
             print("something broke with character", ch)
+            raise SyntaxError(f"Invalid character found while generating tokens: {ch}")
