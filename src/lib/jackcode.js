@@ -2,13 +2,11 @@ export const jackCode = [
 	{
 		name: 'Square',
 		description:
-			'Square Dance game by Nisan and Schocken. Use the arrow keys to move the square, Z to decrease size and X to increase size and Q to quit.',
+			'Square Dance game by Nisan and Schocken. Use the arrow keys to move the square, Z to decrease size, X to increase size, Q to quit.',
 		code: `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
 // File name: projects/11/Square/Main.jack
-
-// (same as projects/09/Square/Main.jack)
 
 /** Initializes a new Square Dance game and starts running it. */
 class Main {
@@ -216,7 +214,9 @@ class SquareGame {
 		name: 'Snake',
 		description:
 			'Classic Snake game written by me! Use the arrow keys to change the direction of the snake and collect the apples. The part of this that I am most proud of is the tiny linear congruential generator random number generator that I designed to handle the placement of the apples.',
-		code: `/** Intializes the Snake and start running the game */
+		code: `// Classic Snake game in Jack, by Martin Grym
+      
+/** Intializes the Snake and start running the game */
 class Main {
    function void main() {
       var SnakeGame game;
@@ -331,7 +331,6 @@ class Segment {
 
 /** Implements a snake for the game snake
 The snake has 4 movement directions
-Can cross across the borders of the screen
 It is able to grow
 And it dies if it intersects itself
 
@@ -342,6 +341,7 @@ as the snake gets longer. This is relatively easy to do
 when drawing the snake, but is harder when checking for intersection.
 To make intersection checks constant time, a hash table would have to be used.
 */
+
 class Snake {
   field Segment head; // head of the snake, poiting to null
   field Segment tail; // tail of the snake, pointing to a Segment towards the head

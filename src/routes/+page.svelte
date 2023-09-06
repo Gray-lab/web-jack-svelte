@@ -225,7 +225,7 @@ populate this window */`;
 	<div slot="header" class="modal-header default-txt">Instructions</div>
 	<div slot="body" class="modal-body default-txt">
 		<ol>
-			<li>Select a sample program or write your own using the Blank preset</li>
+			<li>Select a sample program or write your own using the Custom preset</li>
 			<br />
 			<li>Once the Jack code is ready, click Compile to compile to bytecode</li>
 			<br />
@@ -242,7 +242,7 @@ populate this window */`;
 			</li>
 		</ol>
 		<p>
-			Note that loading a new preset will clear any edits. Copy and paste the code to save it
+			Note: Loading a new preset will clear any edits. Copy and paste the code to save it
 			locally if you want to retain any changes.
 		</p>
 	</div>
