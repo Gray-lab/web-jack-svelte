@@ -1,5 +1,4 @@
 <script>
-	export let label = 'Default Button';
 	export let onClick;
 	export let disabled = false;
 	export let style = 'default';
@@ -18,7 +17,7 @@
 	on:click={onClick}
 	style="--background-color: {backgroundColor}; --min-width:{minWidth};"
 >
-	{label}
+	<slot>Default</slot>
 </button>
 
 <style>
