@@ -16,19 +16,17 @@ Events/interactions
 Keyboard -> when Running, keyboard events should go to the runtime keyboard on-down handler
 Otherwise, keyboard output should go to the selected codemirror instance
 
-
 ~~1. check if a test program can be run using the wasm bindings~~
 
 2. fix stuff:
-    - Double size of canvas
-    - Use clean sans-serif font for non-code stuff
-    - Adjust colors
-        - anchor tags
-    - Get rid of reset button
-    - codemirror cursor -> green
+    - ~~Double size of canvas~~
+    - ~~Use clean sans-serif font for non-code stuff~~
+    - ~~Adjust colors~~
+    - ~~Get rid of reset button~~
+    - ~~codemirror cursor -> green~~
     - set stepsize larger for firefox
-    - check safari
-    - deal with mobile with a popup
+    - ~~check safari~~
+    - ~~deal with mobile with a popup~~
 
 3. add core functionality
     - ~~Bytecode updates on edit~~
@@ -39,7 +37,7 @@ Otherwise, keyboard output should go to the selected codemirror instance
 
 4. add secondary functionality
     - ~~Compile jack to jack bytecode~~
-    - Disable control buttons if program is not readied
+    - ~~Disable control buttons if program is not readied~~
     - Gray out editors while program is running; provide some kind of hint
     - Display stack
     - Highligh stack pointer
