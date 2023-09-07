@@ -47,3 +47,12 @@ Otherwise, keyboard output should go to the selected codemirror instance
         - 3 or 4 buttons with presets. Descriptions in About? 
     - Warning popup for losing changes when switching programs?
     - Implement the memory display using virtualized lists
+
+
+
+polish:
+ - major freezing issues when editing code after loading program (need to only render elements visible in the memory display)
+ - fix font in memory
+ - fix keybindings in square game
+ - program end resets state?
+ - clicking "end" rebuilds program
