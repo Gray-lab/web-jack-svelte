@@ -51,7 +51,7 @@ populate this window */`;
 	// button and keyboard handlers
 	function onKeyDown(e) {
 		if (running) e.preventDefault();
-		console.log(e.key);
+		// console.log(e.key);
 		if (e.key.length === 1) {
 			currentKey = e.key.charCodeAt(0);
 		} else if (e.key in input_map) {
@@ -100,7 +100,7 @@ populate this window */`;
 	function onCompileClick() {
 		compiled = true;
 		console.log('compiling...');
-		console.log($jackcodeStore);
+		// console.log($jackcodeStore);
 		const res = compiler.compile_main($jackcodeStore);
 		bytecodeStore.set(res);
 	}

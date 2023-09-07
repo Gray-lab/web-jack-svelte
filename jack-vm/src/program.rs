@@ -370,8 +370,8 @@ impl Program {
         frame.next_line += 1;
 
         // This prints the current command to the web console for debugging
-        let command_string = format!("Executing {}:{:?}", frame.next_line - 1, current_command);
-        console_log!("{}", command_string);
+        // let command_string = format!("Executing {}:{:?}", frame.next_line - 1, current_command);
+        // console_log!("{}", command_string);
 
         match &current_command.command {
             Command::Pop(seg, idx) => {

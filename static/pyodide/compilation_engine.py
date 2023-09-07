@@ -394,7 +394,7 @@ class CompilationEngine:
             self.consume_token("symbol", ["="])
             self.compile_expression()
             self.consume_token("symbol", [";"])
-            print(table)
+            # print(table)
             self.result += (vm_writer.pop(table.kind_of(variable), table.index_of(variable)))
 
     def compile_if(self): 
