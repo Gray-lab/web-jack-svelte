@@ -10,6 +10,7 @@
 
 <style>
 	.index {
+		font-family: monospace;
 		padding: 1px 5px;
 		text-align: right;
 		color: #e3e3e3;
@@ -18,6 +19,7 @@
 	}
 
 	.value {
+		font-family: monospace;
 		padding: 1px 10px;
 		width: 100%;
 		border-bottom: 1px solid black;
@@ -25,5 +27,6 @@
 	}
 	.cell {
 		display: flex;
+		height: 20px;
 	}
 </style>
