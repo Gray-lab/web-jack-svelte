@@ -271,7 +271,7 @@ populate this window */`;
 					this website lets anyone write, compile, and execute code written in the Jack language.
 					<br />
 					<br />
-					Happy hacking
+					Happy hacking!
 					<br />
 					<br />
 					<br />
