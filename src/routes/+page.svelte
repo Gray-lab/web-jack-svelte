@@ -38,7 +38,9 @@
 
 	$: showMem = false;
 	let memArray = new Array(500).fill(0);
-	$: stepCount = 20;
+
+	// Determinesthe execution speed by setting how many instructions are executed per frame render. Firefox is really slow for some reason.
+	$: stepCount = 15;
 
 	export let upper_container_height = scale * height + 100;
 
@@ -162,6 +164,12 @@ populate this window */`;
 	onMount(async () => {
 		// at less than 1080px width, canvas starts to be covered by edge of window
 		showWindowWarning = document.documentElement.clientWidth < 1080;
+
+		// Firefox is slow :(
+		const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+		if (isFirefox) {
+			stepCount = 40;
+		}
 
 		// init initializes memory addresses needed by WASM and that will be used by JS/TS
 		wasmInstance = await init();
@@ -372,7 +380,7 @@ populate this window */`;
 
 <style>
 	:global(body) {
-		overflow:hidden;
+		overflow: hidden;
 		font-size: 14px;
 		line-height: 1.2em;
 		color-scheme: dark;
@@ -413,7 +421,7 @@ populate this window */`;
 	}
 
 	.app-container {
-		overflow:auto;
+		overflow: auto;
 		align-content: center;
 		background-color: rgb(49, 49, 49);
 		height: 100vh;
