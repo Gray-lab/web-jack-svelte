@@ -436,8 +436,11 @@ pub fn print_int(memory: &mut Memory, args: WordSize) -> WordSize {
     let mut digits = vec![];
     let sign: WordSize = if i < 0 { -1 } else { 1 };
 
-    console_log!("In print in with value {}", i);
+    console_log!("In print int with value {}", i);
     i = i * sign;
+    if i == 0 {
+        digits.push(48);
+    }
     while i != 0 {
         digits.push((i % 10) + 48); /* value 48 corresponds to a 0 character in the character bitmap */
         i /= 10;
