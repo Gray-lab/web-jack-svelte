@@ -15,6 +15,8 @@
 	const width = 512;
 	const height = 256;
 
+	let start;
+	let end;
 	let canvas;
 	let ctx;
 	let program;
@@ -35,8 +37,8 @@
 	let showInstructions = false;
 
 	$: showMem = false;
-	$: memArray = new Array(256).fill(0);
-	$: stepCount = 30;
+	let memArray = new Array(500).fill(0);
+	$: stepCount = 20;
 
 	export let upper_container_height = scale * height + 100;
 
@@ -150,7 +152,7 @@ populate this window */`;
 		for (let i = 0; i < stepCount; i++) {
 			program.step(currentKey);
 		}
-		if (showMem) memArray = memArray; // assignment triggers reactive update in Svelte
+		// if (showMem) memArray = memArray; // assignment triggers reactive update in Svelte
 	}
 
 	function runLoopCallback() {
@@ -242,8 +244,8 @@ populate this window */`;
 			</li>
 		</ol>
 		<p>
-			Note: Loading a new preset will clear any edits. Copy and paste the code to save it
-			locally if you want to retain any changes.
+			Note: Loading a new preset will clear any edits. Copy and paste the code to save it locally if
+			you want to retain any changes.
 		</p>
 	</div>
 </Modal>
@@ -370,12 +372,13 @@ populate this window */`;
 
 <style>
 	:global(body) {
-		overflow: hidden;
+		overflow:hidden;
 		font-size: 14px;
 		line-height: 1.2em;
 		color-scheme: dark;
 		--height-offset: 140px;
 		background-color: rgb(49, 49, 49);
+		margin: 0px;
 		/* Hide scrollbar for IE, Edge and Firefox */
 		/* -ms-overflow-style: none; /* IE and Edge */
 		/* scrollbar-width: none; /* Firefox */
@@ -410,6 +413,7 @@ populate this window */`;
 	}
 
 	.app-container {
+		overflow:auto;
 		align-content: center;
 		background-color: rgb(49, 49, 49);
 		height: 100vh;
@@ -420,7 +424,6 @@ populate this window */`;
 		display: flex;
 		flex-direction: column;
 		max-width: 1400px;
-		height: 99%;
 		margin: auto;
 		padding: 10px 40px;
 		background-color: rgb(49, 49, 49);
@@ -440,7 +443,8 @@ populate this window */`;
 		display: flex;
 		flex-direction: row;
 		flex-grow: 1;
-		max-height: calc(100vh - var(--upper-container-height));
+		max-height: calc(95vh - var(--upper-container-height));
+		min-height: 400px;
 		width: 100%;
 		padding-top: 20px;
 	}
@@ -490,7 +494,6 @@ populate this window */`;
 	.presets {
 		display: flex;
 		flex-direction: column;
-		color: #707070;
 		border-top: 1px solid #202020;
 		width: 100%;
 		flex-grow: 1;
