@@ -857,7 +857,7 @@ pub fn de_alloc(memory: &mut Memory, args: WordSize) -> WordSize {
 pub fn wait(memory: &mut Memory, args: WordSize) -> WordSize {
     assert!(args == 1);
     let mut _wait_time = memory.get_arg(0);
-    console_log!("Waiting for {}", _wait_time);
+    // console_log!("Waiting for {}", _wait_time);
     while _wait_time > 0 {
         _wait_time -= 1;
     }
