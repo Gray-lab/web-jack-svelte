@@ -254,7 +254,7 @@ populate this window */`;
 	<div class="inner-container">
 		<div class="upper-container" style="--upper-container-height: {upper_container_height}px;">
 			<div class="intro-container default-txt">
-				<div class="nav-container">
+				<nav class="nav-container">
 					<h3 class="title"><a href="/">web_jack</a></h3>
 					<div class="nav-item"><a href="/license">License</a></div>
 					<div class="nav-item">
@@ -262,7 +262,7 @@ populate this window */`;
 							>My Github</a
 						>
 					</div>
-				</div>
+				</nav>
 				<p class="intro-text">
 					During my journey to become a software engineer, <a
 						href="https://www.nand2tetris.org/"

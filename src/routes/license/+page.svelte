@@ -4,7 +4,7 @@
 <div class="app-container">
 	<div class="inner-container">
 		<div class="intro-container default-txt">
-			<div class="nav-container">
+			<nav class="nav-container">
 				<h3 class="title"><a href="/">web_jack</a></h3>
 				<div class="nav-item"><a href="/license">License</a></div>
 				<div class="nav-item">
@@ -12,7 +12,7 @@
 						>My Github</a
 					>
 				</div>
-			</div>
+			</nav>
 			<p class="intro-text">
 				This work uses some elements from <a
 					href="https://www.nand2tetris.org/"
