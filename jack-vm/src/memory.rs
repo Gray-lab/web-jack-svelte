@@ -245,7 +245,7 @@ impl Memory {
                 }
             }
         };
-        wasm_bindgen_test::console_log!("{}", format!("\t>>> Popping address {}", address));
+        // wasm_bindgen_test::console_log!("{}", format!("\t>>> Popping address {}", address));
 
         self.ram[address] = value;
         value
