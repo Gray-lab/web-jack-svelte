@@ -6,6 +6,7 @@
 		<div class="intro-container default-txt">
 			<div class="nav-container">
 				<h3 class="title"><a href="/">web_jack</a></h3>
+				<div class="nav-item"><a href="/license">License</a></div>
 				<div class="nav-item">
 					<a href="https://www.github.com/Gray-lab" rel="noopener noreferrer" target="_blank"
 						>My Github</a
