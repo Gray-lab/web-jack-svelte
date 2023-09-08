@@ -9,45 +9,40 @@ Welcome to web_jack - a web based compiler and runtime for the Jack langauge fro
 
 ## Features
 
-- **Svelte Frontend:** The project features a user interface built using Svelte.
-- **Jack Compiler in Python:** The Python-based compiler is capable of parsing and translating Jack source code into bytecode, ready to be executed on the virtual machine.
-- **Runtime Environment and Virtual Machine in Rust (compiled to WebAssembly):** The Rust-based runtime takes the compiled bytecode and executes it efficiently within a WebAssembly environment, ensuring optimal performance.
-- **Integration:** The frontend communicates with the compiled bytecode through WebAssembly, creating a holistic system where user interactions are processed and executed.
+- **Svelte Frontend**
+- **Jack Compiler in Python:** The Python-based compiler parses and translates Jack source code into bytecode, ready for execution on the virtual machine.
+- **Runtime Environment and Virtual Machine in Rust:** The Rust-based runtime executes the compiled bytecode efficiently within a WebAssembly environment, ensuring optimal performance.
+- **Integration:** The frontend communicates with the runtime via bindings to the canvas and the underlying memory array.
 
 ## How to Use
 
-The easiest to play with this project is to visit the [live version](https://web-jack-svelte.vercel.app/) of the site.
+**Clone the repository** 
 
+```
+git clone https://github.com/gray-lab/WEB-JACK-SVELTE.git
+```
 
-If you would like to clone the repo and run a dev server locally, you can do the following:
+**Install NPM packages** 
+```
+npm --install
+```
 
-1. **Clone the Repository:** Begin by cloning this repository to your local machine using the following command:
-
-    ```
-    git clone https://github.com/gray-lab/WEB-JACK-SVELTE.git
-    ```
-
-2. **Install NPM Packages:** While in the root directory, install the required npm packages:
-    ```
-    npm --install
-    ```
-
-3. **Build and Deploy:** The package.json file contains scripts to build and package the Rust files and build and deploy the Svelte frontend. For a local dev server run:
-    ```
-    npm run dev
-    ```
+**Run local develoment server**
+```
+npm run dev
+```
     
 ## Implementation Details
 
 ### Compiler
-The compiler translates high-level Jack code to an intermediate stack machine bytecode representation. The Jack language is a relatively simple language that has basic features such as arithmetic and logical operations, conditional branching and looping, function calls, as well as somewhat more complex features like classes, objects and method calls. 
+The compiler translates high-level Jack code to an intermediate stack machine bytecode representation. The Jack language is relatively simple and offers basic features, e.g. arithmetic and logical operations, conditional branching and looping, function calls, as well as somewhat more complex features like classes, objects and method calls. 
 
-The compiler is written in Python and invoked via the Pyodide Python runtime. It consists of a tokenizer, which parses the Jack code into a token generator, and a recursive descent compiler that builds the bytecode representation by iterating through the token from the beginning to the end, a top-down approach. Symbols are tracked on a class and function level by using symbol tables. The Jack grammar is designed such that a single token lookahead is sufficient to compile the language, with only a couple exceptions that require a two token lookead. This technically makes it a LL(2) grammar, but practically for the majority of the rules it is LL(1).
+The compiler is written in Python and invoked via the Pyodide Python runtime. It consists of a tokenizer, which parses the Jack code into a token generator, and a recursive descent compiler that builds the bytecode representation by iterating through the token from the beginning to the end, a top-down approach. Symbols are tracked on a class and function level via symbol tables. The Jack grammar is designed such that a single token lookahead is sufficient to compile the language, with only a few exceptions requiring a two token lookahead. This technically makes it a LL(2) grammar, but for the majority of the rules it is LL(1).
 
-A full discussion of the Jack language can be found in Chapter 9 of Nand to Tetris for anyone who wants to try their hand at writing their own Jack programs. Note that in the original specification each class is meant to exist in its own file. I changed this for my implementation to simplify editing the code in the browser, and all classes in a program can now be put in the Jack editor together.
+A full discussion of the Jack language can be found in Chapter 9 of Nand to Tetris. Note that in the original specification each class exists in its own file. My implementation is modified to simplify editing code in the browser, and all classes in a program can live in the editor at one time.
 
 ### Standard Library
-A language in isolation is not very useful, and that is also the case for Jack. Therefore, Jack is supported by a standard function library that includes various common operations on integers, strings, display functions, memory allocation, and others. Most of this library was implemented directly in the Rust virtual machine as a function call table. In the original specification, Output and Screen functions directly changed the memory array that underlay the display, but in this implementation, those functions invoke html canvas methods to directly draw elements on the display. To maintain the spirit of the original, characters are still drawn using pixel bitmaps, because bit banging is fun! 
+A language alone is often not very useful, and that is also the case for Jack. Therefore, Jack is supported by a standard function library that includes various common operations on integers, strings, display functions, memory allocation, and others. Most of this library was implemented in the Rust virtual machine as a function call table, with the exception of the input functions, which are implemented in Jack. In the original specification, Output and Screen functions directly changed the memory array that underlay the display, but in this implementation, those functions invoke html canvas methods to directly draw elements on the display. To maintain the spirit of the original, characters are drawn using pixel bitmaps, as bit banging is fun! 
 
 A PDF document of the standard library is available [here](https://www.nand2tetris.org/_files/ugd/44046b_a89c06efcef3491cafb42fb76cc95dc0.pdf) (from Nand to Tetris).
 
