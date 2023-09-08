@@ -5,6 +5,8 @@
 
 Welcome to web_jack - a web based compiler and runtime for the Jack langauge from Nand to Tetris. Web_Jack combines a Svelte frontend with a compiler written in Python and a runtime implemented in Rust and compiled to WebAssembly. After finishing the Nand to Tetris book I wanted to try my hand at learning Rust and web development, and implementing a Jack virtual machine seemed like a great way to demonstrate what I learned and learn some more along the way. 
 
+![](web-jack-preview.png)
+
 ## Features
 
 - **Svelte Frontend:** The project features a user interface built using Svelte.
