@@ -26,7 +26,7 @@
 					href="https://creativecommons.org/licenses/by-nc-sa/3.0/"
 					rel="noopener noreferrer"
 					target="_blank"
-					>Creative Common Attribution-NonCommercial-ShareAlike 3.0 Unported License</a
+					>Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a
 				>.
 				<br /><br />
 				© 2023 Martin Grym
