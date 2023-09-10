@@ -1,5 +1,5 @@
 
-# web_jack
+# [web_jack](https://web-jack-svelte.vercel.app/)
 
 ## Overview
 
@@ -14,7 +14,7 @@ Welcome to web_jack - a web based compiler and runtime for the Jack langauge fro
 - **Runtime Environment and Virtual Machine in Rust:** The Rust-based runtime executes the compiled bytecode efficiently within a WebAssembly environment, ensuring optimal performance.
 - **Integration:** The frontend communicates with the runtime via bindings to the canvas and the underlying memory array.
 
-## How to Use
+## How to Run Locally
 
 **Clone the repository** 
 
